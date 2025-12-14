@@ -1,0 +1,47 @@
+#!/bin/bash
+# ABOUTME: Post-commit hook that reminds Claude about split repo setup
+# ABOUTME: Outputs repo-specific push instructions after every commit
+
+# Colors
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Detect which repo we're in
+REPO_DIR="$(basename "$(git rev-parse --show-toplevel)")"
+
+echo ""
+echo -e "${CYAN}================================================${NC}"
+echo -e "${CYAN}  SPLIT REPO REMINDER                           ${NC}"
+echo -e "${CYAN}================================================${NC}"
+
+if [[ "$REPO_DIR" == *-claude-docs ]]; then
+    # We're in the DOCS repo
+    echo -e "${YELLOW}You just committed to the DOCS repo${NC}"
+    echo ""
+    echo "  Repo: $REPO_DIR"
+    echo "  Push: Gitea ONLY (GitHub blocked by hook)"
+    echo ""
+    echo -e "${GREEN}To push:${NC}"
+    echo "  git push origin main"
+    echo ""
+    echo "NOTE: This repo contains CLAUDE.md, handovers, and todos."
+    echo "      It should NEVER be pushed to GitHub."
+else
+    # We're in the CODE repo
+    echo -e "${YELLOW}You just committed to the CODE repo${NC}"
+    echo ""
+    echo "  Repo: $REPO_DIR"
+    echo "  Push: GitHub (origin) + Gitea (zimacube)"
+    echo ""
+    echo -e "${GREEN}To push:${NC}"
+    echo "  git push origin main      # GitHub"
+    echo "  git push zimacube main    # Gitea mirror"
+    echo ""
+    echo "NOTE: Code changes only. Claude docs are in the sibling"
+    echo "      *-claude-docs repo (accessed via .claude/ symlink)."
+fi
+
+echo -e "${CYAN}================================================${NC}"
+echo ""

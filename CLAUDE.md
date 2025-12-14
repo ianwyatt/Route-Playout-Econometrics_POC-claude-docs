@@ -1,39 +1,67 @@
 # Route Playout Econometrics POC - Project Specification
 
+```
+╔════════════════════════════════════════════════════════════════════════╗
+║                    SPLIT REPOSITORY SETUP                              ║
+║                                                                        ║
+║  CODE REPO: Route-Playout-Econometrics_POC                             ║
+║    - Push to: GitHub (origin) + Gitea (zimacube)                       ║
+║    - Contains: Application source code                                 ║
+║                                                                        ║
+║  DOCS REPO: Route-Playout-Econometrics_POC-claude-docs  (THIS REPO)    ║
+║    - Push to: Gitea ONLY - NEVER PUSH TO GITHUB                        ║
+║    - Contains: CLAUDE.md, handovers, todos, session docs               ║
+║                                                                        ║
+║  The code repo has symlinks (.claude/ and Claude/) pointing here.      ║
+║  Pre-push hooks enforce these rules automatically.                     ║
+╚════════════════════════════════════════════════════════════════════════╝
+```
+
 ---
 
-## Repository Structure
+## CRITICAL: Two Separate Repos
 
-This project uses a **split repo setup** to keep Claude working docs off GitHub:
+**YOU ARE CURRENTLY IN THE DOCS REPO** (`Route-Playout-Econometrics_POC-claude-docs`)
 
-| Repo | Content | Remote |
-|------|---------|--------|
-| `Route-Playout-Econometrics_POC` | Application code | GitHub + Gitea mirror |
-| `Route-Playout-Econometrics_POC-claude-docs` | This repo - Claude docs | **Gitea only** |
+| Repo | What Goes Here | Where to Push |
+|------|----------------|---------------|
+| **Code repo** | Python, Streamlit, src/, tests/ | GitHub + Gitea |
+| **Docs repo** (this one) | CLAUDE.md, handovers, todos | **Gitea ONLY** |
 
-**How it works:**
-- `.claude/` and `Claude/` in the code repo are symlinks to this repo
-- This repo is never pushed to GitHub
+### Committing Code Changes
+```bash
+cd ~/PycharmProjects/Route-Playout-Econometrics_POC
+git add . && git commit -m "feat: whatever"
+git push origin main      # GitHub
+git push zimacube main    # Gitea mirror
+```
 
-**This repo structure:**
+### Committing Doc Changes (handovers, todos, this file)
+```bash
+cd ~/PycharmProjects/Route-Playout-Econometrics_POC-claude-docs
+# OR: cd .claude (from code repo - it's a symlink)
+git add . && git commit -m "docs: session handover"
+git push origin main      # Gitea ONLY - hooks block GitHub
+```
+
+### Why Split?
+- CLAUDE.md contains internal project context not suitable for public GitHub
+- Session handovers are private working documents
+- Code repo stays clean for external sharing
+
+### Docs Repo Structure
 ```
 Route-Playout-Econometrics_POC-claude-docs/
 ├── CLAUDE.md        # This file - project instructions
 ├── SETUP.md         # New machine setup guide
-├── config/          # hooks.json, settings, gitignore template
-├── hooks/           # Git hooks + installer
+├── config/          # hooks.json, settings
+├── hooks/           # Git hooks (enforce split repo rules)
 ├── skills/          # Claude Code skills
 ├── handover/        # Session handovers
 ├── todo/            # Task tracking
 ├── docs/            # Working documentation
-├── reference/       # Streamlit notes, research
+├── reference/       # Research, external refs
 └── archive/         # Old content
-```
-
-**Committing Claude docs:**
-```bash
-cd Route-Playout-Econometrics_POC-claude-docs  # or use symlink: cd .claude
-git add . && git commit -m "message" && git push
 ```
 
 **New machine setup:** See `SETUP.md`
