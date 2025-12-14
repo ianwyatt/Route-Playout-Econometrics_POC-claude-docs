@@ -1,0 +1,83 @@
+#!/bin/bash
+# ABOUTME: Universal pre-commit hook for Claude Code sessions
+# ABOUTME: Checks for sensitive data before allowing commits
+
+# Get the project root
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+
+# Check if Python is available
+if ! command -v python3 &> /dev/null; then
+    echo "⚠️  Python 3 is required for sensitive data checking but not found."
+    echo "   Skipping sensitive data check..."
+    exit 0
+fi
+
+# Check if the sensitive data checker exists
+CHECKER_SCRIPT="${HOME}/.claude/scripts/check_sensitive_data.py"
+if [ ! -f "$CHECKER_SCRIPT" ]; then
+    # Fallback to project-specific script if it exists
+    CHECKER_SCRIPT="${PROJECT_ROOT}/scripts/check_sensitive_data.py"
+    if [ ! -f "$CHECKER_SCRIPT" ]; then
+        echo "⚠️  Sensitive data checker not found. Skipping check..."
+        exit 0
+    fi
+fi
+
+# Run the sensitive data checker
+echo "🔍 Checking for sensitive data in staged files..."
+
+# Run with medium and low severity allowed by default (can be customized)
+python3 "${CHECKER_SCRIPT}" --allow-low
+
+# Capture the exit code
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "❌ Pre-commit check failed: sensitive data detected!"
+    echo ""
+    echo "To bypass this check (NOT RECOMMENDED per CLAUDE.md rules), use:"
+    echo "  git commit --no-verify"
+    echo ""
+    echo "Better options:"
+    echo "  1. Remove the sensitive data from your code"
+    echo "  2. Use environment variables or config files"
+    echo "  3. Add the file to .gitignore if appropriate"
+    exit $EXIT_CODE
+fi
+
+echo "✅ No sensitive data found in staged files."
+echo ""
+
+# Check if scripts README needs updating
+# Get list of staged files in scripts/ directory
+STAGED_SCRIPTS=$(git diff --cached --name-only --diff-filter=AM | grep '^scripts/.*\.py$' | grep -v '^scripts/archive/' | grep -v '^scripts/archived' || true)
+
+if [ -n "$STAGED_SCRIPTS" ]; then
+    # Check if scripts/README.md is also staged
+    README_STAGED=$(git diff --cached --name-only | grep '^scripts/README.md$' || true)
+
+    if [ -z "$README_STAGED" ]; then
+        echo "📝 Script changes detected but README not updated:"
+        echo ""
+        echo "   Modified/New scripts:"
+        echo "$STAGED_SCRIPTS" | sed 's/^/      - /'
+        echo ""
+        echo "   ⚠️  Consider updating scripts/README.md to document:"
+        echo "      • New scripts and their purpose"
+        echo "      • Updated usage examples"
+        echo "      • Changed command-line arguments"
+        echo "      • New workflows or common tasks"
+        echo ""
+        echo "   Quick update:"
+        echo "      git add scripts/README.md"
+        echo ""
+        echo "   (This is a reminder only - commit will proceed)"
+        echo ""
+    else
+        echo "✅ Scripts and README both updated"
+        echo ""
+    fi
+fi
+
+exit 0
