@@ -332,6 +332,118 @@ cd your-project-claude-docs
 .git/hooks/pre-push origin https://your-gitea/user/repo-claude-docs.git
 ```
 
+#### Create `hooks/post-commit` (Reminder Hook)
+
+This hook reminds Claude which repo it's in after every commit:
+
+```bash
+cat > hooks/post-commit << 'HOOKEOF'
+#!/bin/bash
+# ABOUTME: Post-commit hook that reminds Claude about split repo setup
+# ABOUTME: Outputs repo-specific push instructions after every commit
+
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+REPO_DIR="$(basename "$(git rev-parse --show-toplevel)")"
+
+echo ""
+echo -e "${CYAN}================================================${NC}"
+echo -e "${CYAN}  SPLIT REPO REMINDER                           ${NC}"
+echo -e "${CYAN}================================================${NC}"
+
+if [[ "$REPO_DIR" == *-claude-docs ]]; then
+    echo -e "${YELLOW}You just committed to the DOCS repo${NC}"
+    echo ""
+    echo "  Repo: $REPO_DIR"
+    echo "  Push: Gitea ONLY (GitHub blocked by hook)"
+    echo ""
+    echo -e "${GREEN}To push:${NC}"
+    echo "  git push origin main"
+    echo ""
+    echo "NOTE: This repo contains CLAUDE.md, handovers, and todos."
+    echo "      It should NEVER be pushed to GitHub."
+else
+    echo -e "${YELLOW}You just committed to the CODE repo${NC}"
+    echo ""
+    echo "  Repo: $REPO_DIR"
+    echo "  Push: GitHub (origin) + Gitea (if mirrored)"
+    echo ""
+    echo -e "${GREEN}To push:${NC}"
+    echo "  git push origin main      # GitHub"
+    echo "  git push gitea main       # Gitea mirror (if configured)"
+    echo ""
+    echo "NOTE: Code changes only. Claude docs are in the sibling"
+    echo "      *-claude-docs repo (accessed via .claude/ symlink)."
+fi
+
+echo -e "${CYAN}================================================${NC}"
+echo ""
+HOOKEOF
+
+chmod +x hooks/post-commit
+```
+
+#### Update `hooks/install.sh` for All Three Hooks
+
+```bash
+cat > hooks/install.sh << 'INSTALLEOF'
+#!/bin/bash
+# ABOUTME: Install git hooks to both code and docs repos
+# ABOUTME: Run from the docs repo directory
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DOCS_REPO="$(dirname "$SCRIPT_DIR")"
+DOCS_REPO_NAME="$(basename "$DOCS_REPO")"
+CODE_REPO_NAME="${DOCS_REPO_NAME%-claude-docs}"
+CODE_REPO="$(dirname "$DOCS_REPO")/$CODE_REPO_NAME"
+
+echo "=== Git Hook Installer for Split Repo Setup ==="
+echo ""
+
+HOOKS="pre-commit pre-push post-commit"
+
+# Install to CODE repo
+if [ -d "$CODE_REPO/.git" ]; then
+    echo "Installing to CODE repo: $CODE_REPO"
+    for hook in $HOOKS; do
+        if [ -f "$SCRIPT_DIR/$hook" ]; then
+            cp "$SCRIPT_DIR/$hook" "$CODE_REPO/.git/hooks/"
+            chmod +x "$CODE_REPO/.git/hooks/$hook"
+            echo "  [OK] $hook"
+        fi
+    done
+else
+    echo "Warning: Code repo not found at $CODE_REPO"
+fi
+
+echo ""
+
+# Install to DOCS repo
+if [ -d "$DOCS_REPO/.git" ]; then
+    echo "Installing to DOCS repo: $DOCS_REPO"
+    for hook in $HOOKS; do
+        if [ -f "$SCRIPT_DIR/$hook" ]; then
+            cp "$SCRIPT_DIR/$hook" "$DOCS_REPO/.git/hooks/"
+            chmod +x "$DOCS_REPO/.git/hooks/$hook"
+            echo "  [OK] $hook"
+        fi
+    done
+fi
+
+echo ""
+echo "=== Done ==="
+echo "Hook behaviour:"
+echo "  pre-commit  : Blocks sensitive data commits"
+echo "  pre-push    : Blocks docs repo -> GitHub (Gitea only)"
+echo "  post-commit : Reminds Claude which repo and where to push"
+INSTALLEOF
+
+chmod +x hooks/install.sh
+```
+
 ### 10. Commit and Push Docs Repo
 
 ```bash
