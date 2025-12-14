@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "extends": "~/.claude/hooks/global_hook_config.json",
+  "project": "Route-Playout-Econometrics_POC",
+  "hooks": {
+    "session_start": {
+      "enabled": true,
+      "commands": [
+        "echo '🚀 Claude Code session started for Route-Playout-Econometrics_POC'",
+        "[ -f Claude/NEXT_SESSION_START_HERE.md ] && echo '📋 Check Claude/NEXT_SESSION_START_HERE.md for session info'"
+      ]
+    },
+    "post_analysis": {
+      "enabled": true,
+      "command": "[ -f hooks/analysis_output_manager.sh ] && hooks/analysis_output_manager.sh clean-interactive"
+    }
+  },
+  "cleanup": {
+    "auto_cleanup": true,
+    "preserve_days": 7,
+    "patterns_to_clean": [
+      "test_*",
+      "temp_*",
+      "tmp_*",
+      "debug_*"
+    ],
+    "patterns_to_preserve": [
+      "IMPORTANT_*",
+      "FINAL_*",
+      "genuine_*",
+      "production_*"
+    ]
+  }
+}

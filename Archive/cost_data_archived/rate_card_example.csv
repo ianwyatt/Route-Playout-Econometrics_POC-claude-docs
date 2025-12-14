@@ -1,0 +1,15 @@
+location_type,format,base_cpt,peak_multiplier,weekend_multiplier,min_spend
+City Center,Digital 48-sheet,8.50,1.5,1.2,5000
+City Center,Standard 48-sheet,6.00,1.3,1.1,3000
+High Street,Digital 48-sheet,7.00,1.4,1.2,4000
+High Street,Standard 48-sheet,5.00,1.2,1.1,2500
+Shopping Center,Digital Screen,9.00,1.6,1.3,6000
+Shopping Center,6-sheet,3.50,1.1,1.0,1500
+Transport Hub,Digital 48-sheet,7.50,1.8,1.1,4500
+Transport Hub,Standard 48-sheet,5.50,1.5,1.0,3000
+Roadside,96-sheet,4.50,1.0,1.0,2000
+Roadside,48-sheet,3.50,1.0,1.0,1500
+Suburban,48-sheet,3.00,1.0,1.0,1000
+Suburban,6-sheet,2.00,1.0,1.0,500
+Rural,48-sheet,2.50,1.0,1.0,800
+Rural,6-sheet,1.50,1.0,1.0,400
