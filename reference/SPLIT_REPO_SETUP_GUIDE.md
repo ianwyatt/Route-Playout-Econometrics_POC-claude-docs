@@ -2,6 +2,8 @@
 
 **Purpose**: Keep Claude working docs (handovers, todos, CLAUDE.md) in a private Gitea repo while application code goes to public GitHub.
 
+**Reference Implementation**: See `RouteInvoiceProcessor` and `RouteInvoiceProcessor-claude-docs` for a working example.
+
 ---
 
 ## Why This Setup?
@@ -10,6 +12,7 @@
 - **Clean public repo**: GitHub repo looks professional without `.claude/` clutter
 - **Separate histories**: Code and docs evolve independently
 - **Works with Claude Code**: Symlinks make all paths work as expected
+- **Beads can stay in code repo**: Issue tracking syncs separately via its own branch
 
 ---
 
@@ -18,24 +21,38 @@
 ```
 ~/PycharmProjects/
 ├── your-project/                    # Code repo (GitHub + optional Gitea mirror)
-│   ├── .claude -> ../...-claude-docs    # Symlink
-│   ├── Claude -> ../...-claude-docs     # Symlink
+│   ├── .claude -> ../...-claude-docs    # Symlink (the docs repo IS the .claude folder)
+│   ├── Claude -> ../...-claude-docs     # Symlink (same target)
+│   ├── CLAUDE.md -> ../...-claude-docs/CLAUDE.md  # Symlink to main file
+│   ├── .beads/                      # Beads issue tracking (stays in code repo)
 │   ├── src/
-│   ├── .gitignore                   # Excludes .claude/ and Claude/
-│   └── CLAUDE.md                    # Optional stub pointing to .claude/
+│   └── .gitignore                   # Excludes CLAUDE.md, .claude/, Claude/
 │
 └── your-project-claude-docs/        # Docs repo (Gitea ONLY - never GitHub)
     ├── CLAUDE.md                    # Main project instructions
     ├── SETUP.md                     # New machine setup guide
-    ├── config/                      # hooks.json, settings
+    ├── config/                      # settings.json for Claude Code
     ├── hooks/                       # Git hooks + installer
-    ├── skills/                      # Claude Code skill definitions
     ├── handover/                    # Session handovers
     ├── todo/                        # Task tracking
     ├── docs/                        # Working documentation
     ├── archive/                     # Old/superseded content
     └── reference/                   # Research, external references
 ```
+
+### Key Insight: The Docs Repo IS the Claude Folder
+
+The symlink `Claude -> ../your-project-claude-docs` means:
+- The **entire docs repo** becomes the `Claude/` directory in the code repo
+- Files at the **root** of docs repo appear under `Claude/` in code repo
+- NO need for a nested `Claude/` folder inside the docs repo
+
+**Path mapping:**
+| Access from code repo | Actual file location |
+|----------------------|---------------------|
+| `Claude/CLAUDE.md` | `your-project-claude-docs/CLAUDE.md` |
+| `Claude/handover/file.md` | `your-project-claude-docs/handover/file.md` |
+| `.claude/config/settings.json` | `your-project-claude-docs/config/settings.json` |
 
 ---
 
@@ -83,14 +100,26 @@ git push
 ```bash
 cd ../your-project
 
+# Remove any existing Claude files/folders first
+rm -rf Claude .claude CLAUDE.md 2>/dev/null
+
 # Create symlinks to sibling docs repo
 ln -s ../your-project-claude-docs .claude
 ln -s ../your-project-claude-docs Claude
+ln -s ../your-project-claude-docs/CLAUDE.md CLAUDE.md
 
-# Verify
-ls -la .claude Claude
-# Should show: .claude -> ../your-project-claude-docs
+# Verify all three symlinks
+ls -la .claude Claude CLAUDE.md
+# Should show:
+#   .claude -> ../your-project-claude-docs
+#   Claude -> ../your-project-claude-docs
+#   CLAUDE.md -> ../your-project-claude-docs/CLAUDE.md
 ```
+
+**Why three symlinks?**
+- `.claude/` - Claude Code looks here for settings.json, hooks.json
+- `Claude/` - Human-friendly path for handover/, todo/, docs/
+- `CLAUDE.md` - Claude Code reads project instructions from root
 
 ### 5. Update Code Repo .gitignore
 
@@ -98,9 +127,12 @@ Add these lines to `.gitignore`:
 
 ```gitignore
 # Claude docs (symlinked to separate Gitea-only repo)
-.claude/
-Claude/
+CLAUDE.md
+Claude
+.claude
 ```
+
+**Note**: No trailing slashes - we're ignoring the symlink files themselves, not directories.
 
 Commit:
 ```bash
@@ -109,21 +141,17 @@ git commit -m "chore: exclude Claude docs symlinks from git"
 git push
 ```
 
-### 6. (Optional) Create Stub CLAUDE.md in Code Repo
+### 6. Remove Old Claude Files from Git Tracking
 
-If you want Claude to find basic instructions even without symlinks:
+If you previously had Claude files committed to the code repo:
 
 ```bash
-cat > CLAUDE.md << 'EOF'
-# Project Name
+# Remove from git tracking (keeps files locally until symlinks replace them)
+git rm -r --cached Claude/ .claude/ CLAUDE.md 2>/dev/null || true
 
-This project uses [Claude Code](https://claude.ai/claude-code) for AI-assisted development.
-
-Project-specific instructions are maintained separately by the development team.
-EOF
-
-git add CLAUDE.md
-git commit -m "docs: add stub CLAUDE.md"
+# Commit the removal
+git add .gitignore
+git commit -m "chore: remove Claude docs from code repo (moved to separate repo)"
 git push
 ```
 
@@ -535,7 +563,32 @@ This avoids case-sensitivity issues across different filesystems.
 
 ## Reference Implementation
 
-See `Route-Playout-Econometrics_POC` and `Route-Playout-Econometrics_POC-claude-docs` for a working example of this setup.
+See these projects for working examples:
+
+| Code Repo | Docs Repo | Notes |
+|-----------|-----------|-------|
+| `RouteInvoiceProcessor` | `RouteInvoiceProcessor-claude-docs` | Full setup with beads |
+| `Route-Playout-Econometrics_POC` | `Route-Playout-Econometrics_POC-claude-docs` | Original template |
+
+---
+
+## Beads Issue Tracking
+
+**Beads stays in the CODE repo** - it has its own sync mechanism via the `beads-sync` branch.
+
+```bash
+# In code repo
+bd init                          # Initialise beads
+bd ready                         # See available work
+bd sync                          # Sync with remote
+```
+
+Beads config goes in `.beads/config.yaml`:
+```yaml
+sync-branch: "beads-sync"        # For multi-machine sync
+```
+
+This is separate from Claude docs - beads syncs to GitHub while docs only go to Gitea.
 
 ---
 
