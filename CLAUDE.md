@@ -2,35 +2,41 @@
 
 ---
 
-## Repository Structure - IMPORTANT
+## Repository Structure
 
 This project uses a **split repo setup** to keep Claude working docs off GitHub:
 
-| Content | Location | Remote |
-|---------|----------|--------|
-| Application code | This repo | GitHub + Gitea mirror |
-| Claude docs (handovers, todos, skills) | Sibling repo | **Gitea only** |
+| Repo | Content | Remote |
+|------|---------|--------|
+| `Route-Playout-Econometrics_POC` | Application code | GitHub + Gitea mirror |
+| `Route-Playout-Econometrics_POC-claude-docs` | This repo - Claude docs | **Gitea only** |
 
 **How it works:**
-- `.claude/` and `Claude/` are symlinks to `../Route-Playout-Econometrics_POC-claude-docs/`
-- The sibling directory is a separate git repo pushing only to Gitea
-- Code repo `.gitignore` excludes both directories
+- `.claude/` and `Claude/` in the code repo are symlinks to this repo
+- This repo is never pushed to GitHub
+
+**This repo structure:**
+```
+Route-Playout-Econometrics_POC-claude-docs/
+├── CLAUDE.md        # This file - project instructions
+├── SETUP.md         # New machine setup guide
+├── config/          # hooks.json, settings, gitignore template
+├── hooks/           # Git hooks + installer
+├── skills/          # Claude Code skills
+├── handover/        # Session handovers
+├── todo/            # Task tracking
+├── docs/            # Working documentation
+├── reference/       # Streamlit notes, research
+└── archive/         # Old content
+```
 
 **Committing Claude docs:**
 ```bash
-cd ../Route-Playout-Econometrics_POC-claude-docs
+cd Route-Playout-Econometrics_POC-claude-docs  # or use symlink: cd .claude
 git add . && git commit -m "message" && git push
 ```
 
-**Never commit to the code repo:**
-- `.claude/` or `Claude/` contents
-- Handovers, todos, session notes
-- API keys, credentials, internal business details
-
-**New machine setup:** See `../Route-Playout-Econometrics_POC-claude-docs/SETUP.md` for:
-- Symlink creation
-- Git hooks installation (`hooks/install.sh`)
-- `.gitignore` template
+**New machine setup:** See `SETUP.md`
 
 ---
 
