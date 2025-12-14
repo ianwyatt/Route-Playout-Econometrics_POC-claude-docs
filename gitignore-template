@@ -1,0 +1,213 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Test outputs (never commit)
+*test_results*.json
+*demo_metrics*.json
+*.html
+!docs/*.html
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+config/.env
+config/.env.development
+config/.env.production
+config/production.py
+
+# Logs
+*.log
+logs/
+
+# Exports
+exports/
+
+# Imports
+imports/
+
+# Project specific
+/sql/
+*.bak
+*.backup
+*_backup.py
+*.old
+
+# Secrets
+secrets/
+credentials/
+*.key
+*.pem
+*.cert
+*.enc
+.routernf/
+secrets.json
+secrets.enc
+.git-credentials
+git-credentials
+
+# Security incident reports (never commit these)
+**/SECURITY_INCIDENT*.md
+**/security_incident*.md
+**/incident_report*.md
+**/INCIDENT*.md
+
+# Session files
+ClaudeSession/
+*.session
+
+# Claude Code config and working docs (separate Gitea repo, never GitHub)
+.claude/
+Claude/
+
+# Project planning documents (internal, not for GitHub)
+Project Plan/
+
+# MCP implementation docs (archived, not currently used)
+**/Route_API_MCP/
+**/SPACE_API_MCP/
+
+# Large data files
+*.xlsx
+*.xls
+*.csv
+!requirements.txt
+!requirements-dev.txt
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# UV specific
+.uv/
+
+# FastAPI specific
+*.pid
+
+# Streamlit specific
+.streamlit/
+
+# Additional database files
+*.db-journal
+*.db-wal
+*.db-shm
+postgresql.conf
+pg_hba.conf
+pg_ident.conf
+
+# API credentials and tokens
+api_keys.txt
+tokens.txt
+auth.json
+oauth.json
+
+# Additional temporary files
+*.temp
+
+# Data files (project specific)
+data/sensitive/
+data/private/
+*.csv.bak
+*.xlsx.bak
+
+# Playout data files (large downloaded files)
+Playout/playout-data-raw/
+Playout/playout-data-archive/
+Playout/playout-data-processed/
+Playout/playout-data/*.csv
+Playout/playout-data/*.csv.gz
+Playout/playout-data/*.gz
+Playout/*.json
+import_metadata.json
+
+# Example projects and reference materials (local only)
+Example_Python_Project_with_*/
+Route releases for Playout Audiences/
+Talon Econometrics References/
+Playout/
+playout-pipeline/.env
+playout-pipeline/data/
+playout-pipeline/logs/
+
+# Archived components (pipeline moved to separate repo)
+archived-components/
+
+# Deployment configs (local network infrastructure - never commit)
+deployment/
+
+# Route API response files (test outputs at project root)
+route_response_*.json
+
+# Test files at project root (not in tests/ directory)
+/test_route_api_*.py
+/test_*.py
+!/tests/test_*.py
+
+# Phase documentation at root (temporary)
+PHASE*.md
