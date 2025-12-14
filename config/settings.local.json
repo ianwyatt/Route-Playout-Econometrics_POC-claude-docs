@@ -1,36 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PGPASSWORD='S1lgang-Amu\\ck' psql:*)",
-      "Bash(PGPASSWORD='S1lgang-Amu\\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c \"\nSELECT pg_get_viewdef(''''mv_campaign_browser'''', true);\n\")",
-      "Bash(PGPASSWORD=S1lgang-Amu\\ck psql:*)",
-      "Bash(PGPASSWORD='postgres' psql:*)",
-      "Bash(DEMO_MODE=true python:*)",
-      "Bash(pgrep:*)",
-      "Bash(time PGPASSWORD='S1lgang-Amu\\ck' psql:*)",
-      "Bash(time python:*)",
-      "Bash(CLAUDE_COMMIT_APPROVED=true git commit -m \"$(cat <<''EOF''\nrefactor: exec summary region chart to table, add commit approval rules\n\n- Replace pie chart with clean table for Impacts by Region (better for long names)\n- Add spacer to align table container with adjacent charts\n- Format Daily Impacts date axis as single-line (%d %b)\n- Move (000s) from titles to y-axis labels for consistency\n- Add media_owner_names to campaign summary for full list display\n- Add commit approval rules to CLAUDE.md and pre-commit hook\n- Pre-commit hook now blocks non-interactive commits without CLAUDE_COMMIT_APPROVED=true\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nCo-Authored-By: ian@route.org.uk\nEOF\n)\")",
-      "Bash(CLAUDE_COMMIT_APPROVED=true git commit -m \"$(cat <<''EOF''\nperf: add denormalized MVs for 9x faster frame audience queries\n\n- Create mv_frame_audience_daily (3.2M rows) with pre-joined frame details\n- Create mv_frame_audience_hourly (46M rows) with pre-joined frame details\n- Update queries to use denormalized MVs (3.8ms vs 33ms)\n- Add SQL LIMIT to queries for fast initial load (2000 rows default)\n- Add pagination UI with \"Load All Records\" button\n- Add CSV/Excel download buttons for full dataset export\n- Remove redundant success boxes from UI\n- Update ARCHITECTURE.md with performance optimization docs\n\nPerformance improvements:\n- Daily queries: 33ms → 3.8ms (9x faster)\n- Initial page load: fetches 2000 rows via SQL LIMIT\n- Tab switching: cached with @st.cache_data (1hr TTL)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nCo-Authored-By: ian@route.org.uk\nEOF\n)\")",
-      "Bash(CLAUDE_COMMIT_APPROVED=true git commit -m \"$(cat <<''EOF''\ndocs: add MV frame audience fix documentation\n\n- Update ARCHITECTURE.md with route_release_id join logic explanation\n- Add pipeline-handover MV fix document with full SQL recreation scripts\n- Document why join must use release_number = ''R'' || route_release_id::text\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nCo-Authored-By: ian@route.org.uk\nEOF\n)\")",
-      "Bash(CLAUDE_COMMIT_APPROVED=true git commit:*)",
-      "Bash(~/.claude/scripts/install_hooks.sh)",
-      "Bash(USE_MS01_DATABASE=false python:*)",
-      "Bash(POSTGRES_HOST_MS01=192.168.1.34 USE_MS01_DATABASE=true python:*)",
-      "Bash(\"docs/pipeline-handover/CACHE_USAGE_GUIDE.md\" )",
-      "Bash(\"docs/ARCHITECTURE.md\" )",
-      "Bash(\"docs/PHASE_7_QUICK_REFERENCE.md\" )",
-      "Bash(\"tests/test_phase7_integration.py\" )",
-      "Bash(\"PHASE_7_TEST_RESULTS.md\" )",
-      "Bash(\"src/db/cache_queries.py\" )",
-      "Bash(\"src/api/campaign_service.py\" )",
-      "Bash(\"src/ui/app.py\" )",
-      "Bash(\"src/db/streamlit_queries.py\")",
-      "WebSearch",
-      "Bash(PGPASSWORD='Homer-Subset-Bale-Canoed-2973' psql:*)",
-      "Bash(xargs -I{} git show {}~50:src/ui/app.py)",
-      "WebFetch(domain:www.digitalocean.com)"
-    ],
-    "deny": [],
-    "ask": []
+      "Bash(./hooks/install.sh:*)",
+      "Bash(.git/hooks/pre-push github https://github.com/ianwyatt/some-repo.git)",
+      "Bash(.git/hooks/pre-push origin https://zimacube-gitea.eagle-pythagorean.ts.net/IanW/Route-Playout-Econometrics_POC-claude-docs.git)",
+      "Bash(.git/hooks/post-commit)"
+    ]
   }
 }
