@@ -4,7 +4,10 @@
       "Bash(./hooks/install.sh:*)",
       "Bash(.git/hooks/pre-push github https://github.com/ianwyatt/some-repo.git)",
       "Bash(.git/hooks/pre-push origin https://zimacube-gitea.eagle-pythagorean.ts.net/IanW/Route-Playout-Econometrics_POC-claude-docs.git)",
-      "Bash(.git/hooks/post-commit)"
+      "Bash(.git/hooks/post-commit)",
+      "Bash(bd doctor:*)",
+      "Bash(bd stats:*)",
+      "Bash(claude /plugin list:*)"
     ]
   }
 }
