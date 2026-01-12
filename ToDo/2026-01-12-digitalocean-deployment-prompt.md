@@ -1,4 +1,4 @@
-# Next Session Prompt: DigitalOcean Database Deployment
+# Next Session Prompt: DigitalOcean Full Deployment
 
 Copy and paste this prompt to start the next session:
 
@@ -6,7 +6,13 @@ Copy and paste this prompt to start the next session:
 
 ## Prompt
 
-I want to deploy the Route Playout Econometrics POC database to DigitalOcean for reliable demos without depending on my Mac's local database.
+I want to deploy the Route Playout Econometrics POC (both database AND app) to DigitalOcean for reliable demos without depending on my Mac.
+
+**Important context:**
+- This is a **demo deployment for my personal use only**
+- I'm the only person who will access it
+- We should implement geo-blocking to GB for additional security
+- Use PocketID for authentication (passkey-only OIDC, no passwords)
 
 In the previous session we:
 1. Analysed which tables the app actually needs (see `docs/12-database-export.md`)
@@ -17,12 +23,17 @@ In the previous session we:
 - Source database: MS-01 PostgreSQL server (~620GB total, but we're excluding playout_data)
 - The largest table we need is `cache_route_impacts_15min_by_demo` (~416M rows)
 - Demo campaigns: 16699, 16879, 16882, 18409
+- App: Streamlit (Python)
 
-**Tasks for this session:**
+---
+
+## Part 1: Database Deployment
+
+**Tasks:**
 
 1. **Size estimation**: Query MS-01 to get actual sizes of required tables (excluding playout_data)
 
-2. **DigitalOcean requirements**: Based on the size, recommend:
+2. **DigitalOcean Managed PostgreSQL**: Recommend:
    - Database tier (Basic vs Professional)
    - Storage size needed
    - Compute size (vCPUs/RAM)
@@ -32,22 +43,53 @@ In the previous session we:
    - Full export (all campaigns, ~50-100GB estimate)
    - Demo-only export (specific campaigns, ~1-5GB estimate)
 
-4. **Export execution**: Run the export from MS-01
+4. **Export and import**: Execute the migration
 
-5. **DigitalOcean setup**:
-   - Create managed PostgreSQL database
-   - Configure connection settings
-   - Import the data
+---
 
-6. **App configuration**:
-   - Add DigitalOcean database credentials to `.env`
-   - Test the app connects correctly
-   - Verify demo campaigns load properly
+## Part 2: App Deployment
 
-**Questions to answer:**
-- Should we do a full export or demo-only for cost savings?
+**Tasks:**
+
+5. **DigitalOcean Droplet (VPS)**: Recommend:
+   - Droplet size for Streamlit app
+   - Region (London for GB geo-blocking)
+   - Estimated monthly cost
+
+6. **Security setup**:
+   - HTTPS with Let's Encrypt
+   - Geo-blocking to GB only (via DigitalOcean firewall or nginx)
+   - PocketID authentication integration
+   - Firewall rules
+
+7. **App deployment**:
+   - Install Python/UV
+   - Clone repo, install dependencies
+   - Configure systemd service or Docker
+   - Set up reverse proxy (nginx/Caddy)
+
+8. **Configuration**:
+   - Environment variables for cloud database
+   - PocketID OIDC settings
+   - Test end-to-end
+
+---
+
+## Questions to Answer
+
+**Database:**
+- Full export or demo-only for cost savings?
 - What's the actual size of the data we need?
-- What DigitalOcean tier gives us acceptable performance for demos?
+- What DigitalOcean tier gives acceptable performance?
+
+**App:**
+- What Droplet size for a single-user Streamlit app?
+- Docker vs bare metal deployment?
+- How to integrate PocketID with Streamlit?
+- Best approach for GB geo-blocking?
+
+**Cost:**
+- Total monthly cost estimate (database + VPS)?
 
 ---
 

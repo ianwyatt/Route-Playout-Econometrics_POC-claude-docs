@@ -143,13 +143,23 @@ Campaign dates reflect **actual playouts**, not declared schedules.
 
 **Prepared prompt saved to**: `todo/2026-01-12-digitalocean-deployment-prompt.md`
 
-Key tasks for next session:
+### Database Deployment
 1. Estimate database size without playout_data
-2. Determine DigitalOcean compute/storage requirements
+2. Determine DigitalOcean Managed PostgreSQL requirements
 3. Export data from MS-01
-4. Set up DigitalOcean Managed PostgreSQL
-5. Import and verify
-6. Update app configuration for cloud database
+4. Import and verify
+
+### App Deployment (NEW)
+5. Deploy Streamlit app to DigitalOcean VPS (Droplet)
+6. Set up PocketID authentication (passkey-only OIDC)
+7. Implement geo-blocking to GB only
+8. Configure HTTPS and security best practices
+
+### Context
+- This is a **demo deployment for personal use only**
+- User is the only person who will access it
+- Geo-blocking to GB provides additional security layer
+- PocketID = passkey-only authentication (no passwords)
 
 ---
 
