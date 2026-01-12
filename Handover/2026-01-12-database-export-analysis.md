@@ -161,6 +161,29 @@ Campaign dates reflect **actual playouts**, not declared schedules.
 - Geo-blocking to GB provides additional security layer
 - PocketID = passkey-only authentication (no passwords)
 
+### Security Architecture (Recommended)
+
+```
+User → Pangolin/Cloudflare → DigitalOcean Firewall → Droplet (VPC) → PostgreSQL (private)
+```
+
+**Key security measures:**
+- VPC: Database only accessible via private IP (not public internet)
+- Read-only DB user: App can only SELECT, not modify data
+- Pangolin: Self-hosted reverse proxy (avoids Cloudflare 100MB limit for exports)
+- Geo-blocking: GB only
+- PocketID: Passkey-only OIDC authentication
+- SSH: Key-only, non-standard port, Fail2ban
+- Security headers: HSTS, X-Frame-Options, CSP
+- Rate limiting: Prevent abuse
+- Auto-updates: Unattended security patches
+
+**Why Pangolin over Cloudflare:**
+- Cloudflare free tier has 100MB upload/request limit
+- Data exports could exceed this
+- Pangolin is self-hosted, no such limits
+- Still provides tunneling, SSL, and can do geo-blocking
+
 ---
 
 ## Technical Notes

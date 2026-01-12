@@ -56,11 +56,15 @@ In the previous session we:
    - Region (London for GB geo-blocking)
    - Estimated monthly cost
 
-6. **Security setup**:
+6. **Security setup** (see detailed recommendations below):
+   - VPC: Database on private IP only (not public)
+   - Read-only database user (SELECT only)
+   - Pangolin or Cloudflare for reverse proxy
+   - Geo-blocking to GB only
+   - PocketID authentication (passkey-only OIDC)
+   - SSH hardening (key-only, non-standard port, Fail2ban)
+   - Security headers, rate limiting
    - HTTPS with Let's Encrypt
-   - Geo-blocking to GB only (via DigitalOcean firewall or nginx)
-   - PocketID authentication integration
-   - Firewall rules
 
 7. **App deployment**:
    - Install Python/UV
@@ -90,6 +94,44 @@ In the previous session we:
 
 **Cost:**
 - Total monthly cost estimate (database + VPS)?
+
+---
+
+## Security Architecture (Recommended)
+
+```
+User → Pangolin (geo-block, SSL) → DO Firewall → Droplet (VPC) → PostgreSQL (private IP)
+```
+
+### Essential Security Measures
+
+| Measure | Purpose |
+|---------|---------|
+| VPC private network | Database not exposed to internet |
+| Read-only DB user | Even if compromised, can't modify data |
+| Pangolin | Self-hosted proxy (no 100MB limit like Cloudflare) |
+| PocketID | Passkey-only auth (phishing resistant) |
+| Geo-blocking | GB only, reduces attack surface |
+| SSH hardening | Key-only, port 2222, Fail2ban |
+| Security headers | HSTS, X-Frame-Options, CSP |
+| Rate limiting | Prevent abuse |
+| Auto-updates | Unattended security patches |
+
+### Why Pangolin over Cloudflare?
+
+- Cloudflare free tier: 100MB upload/request limit
+- Data exports (CSV, Excel, Parquet) could exceed this
+- Pangolin: Self-hosted, no limits, still provides SSL + geo-blocking
+
+### Database Security
+
+```sql
+-- Read-only user for app
+CREATE USER demo_app WITH PASSWORD 'xxx';
+GRANT CONNECT ON DATABASE route_playout TO demo_app;
+GRANT USAGE ON SCHEMA public TO demo_app;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO demo_app;
+```
 
 ---
 
