@@ -7,7 +7,7 @@ Complete setup for Route Playout Econometrics POC development environment.
 ```bash
 # 1. Clone both repos as siblings
 cd ~/PycharmProjects
-git clone https://github.com/ianwyatt/Route-Playout-Econometrics_POC.git
+git clone https://github.com/RouteResearch/Route-Playout-Econometrics_POC.git
 git clone https://zimacube-gitea.eagle-pythagorean.ts.net/IanW/Route-Playout-Econometrics_POC-claude-docs.git
 
 # 2. Add Gitea mirror remote to code repo
