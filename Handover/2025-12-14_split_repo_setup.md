@@ -77,7 +77,7 @@ See `SETUP.md` for complete instructions. Quick version:
 
 ```bash
 cd ~/PycharmProjects
-git clone https://github.com/ianwyatt/Route-Playout-Econometrics_POC.git
+git clone https://github.com/RouteResearch/Route-Playout-Econometrics_POC.git
 git clone https://zimacube-gitea.eagle-pythagorean.ts.net/IanW/Route-Playout-Econometrics_POC-claude-docs.git
 
 cd Route-Playout-Econometrics_POC

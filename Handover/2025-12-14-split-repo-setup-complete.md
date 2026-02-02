@@ -202,7 +202,7 @@ startstream local demo
 
 ### Code Repo
 ```
-origin   → https://github.com/ianwyatt/Route-Playout-Econometrics_POC.git
+origin   → https://github.com/RouteResearch/Route-Playout-Econometrics_POC.git
 zimacube → https://zimacube-gitea.eagle-pythagorean.ts.net/IanW/Route-Playout-Econometrics_POC.git
 ```
 
