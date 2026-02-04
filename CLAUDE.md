@@ -102,9 +102,8 @@ This rule exists because premature commits disrupt the user's workflow and versi
 - **UI Guide**: `docs/02-ui-guide.md`
 - **Demo Mode**: `docs/03-demo-mode.md`
 - **Cache Integration**: `docs/04-cache-integration.md`
-- **Route API**: `docs/api-reference/route/`
-- **SPACE API**: `docs/api-reference/space/`
-- **Playout Schema**: `docs/playout/playout-digital-file-format.md`, `playout-classic-file-format.md`
+- **Playout Schema** (archived): `reference/playout-file-formats/` in claude-docs repo
+- **API Reference** (archived): `docs/archive/api-reference/` — Route and SPACE API docs for reference only; this POC never calls APIs directly
 
 ---
 
