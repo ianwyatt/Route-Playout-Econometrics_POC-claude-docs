@@ -84,10 +84,10 @@ This rule exists because premature commits disrupt the user's workflow and versi
 ## Project Scope
 
 **This POC focuses exclusively on:**
-- User interface for campaign analysis
-- Route API and SPACE API integration for live queries
-- Data visualization and interactive mapping
-- Data export capabilities (CSV, Excel, Parquet)
+- User interface for campaign analysis (Streamlit)
+- Read-only queries against PostgreSQL cache tables
+- Data visualisation and interactive mapping
+- Data export capabilities (CSV, Excel)
 - Query interface for econometricians
 
 **Pipeline work (data ingestion, processing) is handled separately:**
@@ -112,7 +112,7 @@ This rule exists because premature commits disrupt the user's workflow and versi
 
 **Primary Use Case**: Econometrician enters Campaign ID (buyercampaignref) → System queries PostgreSQL cache for audience data → Presents metrics and allows export.
 
-**Architecture**: Cache-first design - all data served from PostgreSQL materialized views. Route API only called as fallback for uncached campaigns (rare).
+**Architecture**: Cache-only design - all data served from PostgreSQL materialised views. No live API calls are made by this application.
 
 **Aggregation Levels**: By day, time period, environment, media owner
 
@@ -263,11 +263,11 @@ startstream
 startstream demo
 
 # Or manually:
-USE_MS01_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504
+USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504
 ```
 
 ### Environment
-See `.env.example` for required variables (Route API, SPACE API, Database credentials).
+See `.env.example` for required variables (database credentials only).
 
 ### Manual Streamlit App Management
 
@@ -276,16 +276,16 @@ See `.env.example` for required variables (Route API, SPACE API, Database creden
 **Recommended workflow** (using shell function in `~/.zshrc`):
 
 ```bash
-# Start app (MS01 database, normal mode) - auto-stops any running instance
+# Start app (primary database, normal mode) - auto-stops any running instance
 startstream
 
 # Start in demo mode (brands anonymised for presentations)
 startstream demo
 
-# Start with local database
+# Start with secondary database
 startstream local
 
-# Start local database in demo mode
+# Start secondary database in demo mode
 startstream local demo
 
 # Stop all Streamlit processes (if needed separately)
@@ -294,12 +294,13 @@ stopstream
 
 | Command | Database | Demo Mode |
 |---------|----------|-----------|
-| `startstream` | MS01 | Off |
-| `startstream demo` | MS01 | On |
-| `startstream local` | Local | Off |
-| `startstream local demo` | Local | On |
+| `startstream` | Primary | Off |
+| `startstream demo` | Primary | On |
+| `startstream local` | Secondary | Off |
+| `startstream local demo` | Secondary | On |
 
 **Shell function defined** (in `~/.zshrc`):
+
 ```bash
 alias stopstream='pkill -f "streamlit run"'
 
@@ -307,19 +308,18 @@ startstream() {
     pkill -f "streamlit run" 2>/dev/null
     sleep 1  # Give port time to be released
 
-    local use_ms01="true"
+    local use_primary="true"
     local demo_mode="false"
-    local db_name="MS01"
+    local db_name="Primary"
 
     for arg in "$@"; do
         case "$arg" in
             demo)  demo_mode="true" ;;
-            local) use_ms01="false"; db_name="Local" ;;
-            ms01)  use_ms01="true"; db_name="MS01" ;;
+            local) use_primary="false"; db_name="Local" ;;
         esac
     done
 
-    USE_MS01_DATABASE=$use_ms01 DEMO_MODE=$demo_mode streamlit run src/ui/app.py --server.port 8504 &
+    USE_PRIMARY_DATABASE=$use_primary DEMO_MODE=$demo_mode streamlit run src/ui/app.py --server.port 8504 &
 
     local msg="Started on $db_name database"
     [[ "$demo_mode" == "true" ]] && msg="$msg (DEMO MODE - brands anonymised)"
@@ -330,10 +330,10 @@ startstream() {
 **Manual command** (if not using shell function):
 ```bash
 # Normal mode
-USE_MS01_DATABASE=true streamlit run src/ui/app.py --server.port 8504 &
+USE_PRIMARY_DATABASE=true streamlit run src/ui/app.py --server.port 8504 &
 
 # Demo mode (brands anonymised)
-USE_MS01_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504 &
+USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504 &
 
 # Health check
 curl http://localhost:8504/_stcore/health
@@ -356,4 +356,4 @@ curl http://localhost:8504/_stcore/health
 
 ---
 
-*Last Updated: December 14, 2025*
+*Last Updated: February 4, 2026*

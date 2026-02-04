@@ -1,26 +1,26 @@
 ---
 name: query-database
-description: Query MS-01 PostgreSQL database for playout data. Use when asked to check campaign data, inspect playouts, or debug database queries.
+description: Query PostgreSQL database for playout data. Use when asked to check campaign data, inspect playouts, or debug database queries.
 ---
 
 # Query Database
 
-Query the MS-01 database for playout records and campaign data.
+Query the PostgreSQL database for playout records and campaign data.
 
 ## Commands
 
 ```bash
 # Query by campaign ID
-python skills/database/query_ms01.py --campaign-id 16699
+python skills/database/query_database.py --campaign-id 16699
 
 # Limit results
-python skills/database/query_ms01.py --campaign-id 16699 --limit 10
+python skills/database/query_database.py --campaign-id 16699 --limit 10
 
 # Query by date range
-python skills/database/query_ms01.py --campaign-id 16699 --start-date 2025-01-01 --end-date 2025-01-31
+python skills/database/query_database.py --campaign-id 16699 --start-date 2025-01-01 --end-date 2025-01-31
 
 # Export to CSV
-python skills/database/query_ms01.py --campaign-id 16699 --output results.csv
+python skills/database/query_database.py --campaign-id 16699 --output results.csv
 ```
 
 ## When to Use
