@@ -422,13 +422,13 @@ campaign_impacts AS (
 
 **Check materialized view:**
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 SELECT COUNT(*) FROM mv_campaign_browser;"
 ```
 
 **Sample campaign data:**
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 SELECT campaign_id, primary_brand, brand_count, brand_names,
        primary_media_owner, media_owner_count, media_owner_names
 FROM mv_campaign_browser
@@ -437,7 +437,7 @@ LIMIT 3;"
 
 **Check for active migrations:**
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 SELECT pid, now() - query_start as duration, state, LEFT(query, 80)
 FROM pg_stat_activity
 WHERE state = 'active' AND pid <> pg_backend_pid()

@@ -549,7 +549,7 @@ SELECT impacts * 1000 FROM cache_route_impacts_15min_by_demo
 
 **Test Credentials**:
 - MS-01: `postgres@192.168.1.34:5432/route_poc`
-- Password: `S1lgang-Amu\ck` (in `.env`)
+- Password: `[REDACTED]` (in `.env`)
 - Environment: `USE_MS01_DATABASE=true`
 
 ---

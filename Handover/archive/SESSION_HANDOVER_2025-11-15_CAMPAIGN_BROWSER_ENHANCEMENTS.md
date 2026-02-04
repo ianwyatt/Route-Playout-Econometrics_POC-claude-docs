@@ -114,7 +114,7 @@ CREATE INDEX idx_mv_campaign_browser_media_owner_names
   # Background Bash ID: b058f9
 
   # Or query the view directly
-  PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+  PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
   SELECT
       campaign_id,
       primary_brand,
@@ -304,7 +304,7 @@ st.session_state.use_ms01_database = True  # Database selection
    BashOutput for bash_id: b058f9
 
    # Or query directly
-   PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+   PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
    SELECT COUNT(*) FROM mv_campaign_browser;"
    ```
 
@@ -443,7 +443,7 @@ a03addc feat: add mv_campaign_browser materialized view and query function
 BashOutput bash_id: b058f9
 
 # Query the view
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 SELECT campaign_id, primary_brand, brand_count, brand_names,
        primary_media_owner, media_owner_count, media_owner_names
 FROM mv_campaign_browser
@@ -461,7 +461,7 @@ USE_MS01_DATABASE=false streamlit run src/ui/app_api_real.py --server.port 8504 
 
 ### Refresh Materialized View (After Schema Changes)
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 REFRESH MATERIALIZED VIEW mv_campaign_browser;"
 ```
 

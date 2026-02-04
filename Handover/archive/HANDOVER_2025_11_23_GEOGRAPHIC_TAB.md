@@ -196,7 +196,7 @@ USE_MS01_DATABASE=true streamlit run src/ui/app_api_real.py --server.port 8504
 ## Database Connection
 
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc
 ```
 
 ---

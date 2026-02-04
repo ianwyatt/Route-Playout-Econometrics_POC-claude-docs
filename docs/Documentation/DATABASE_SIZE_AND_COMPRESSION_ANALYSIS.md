@@ -243,7 +243,7 @@ ALTER TABLE playout_data SET (
 
 **Command:**
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' pg_dump \
+PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
     -h 192.168.1.34 -U postgres -d route_poc \
     --schema-only \
     --file=/tmp/route_poc_schema_backup_$(date +%Y%m%d_%H%M%S).sql
@@ -261,7 +261,7 @@ PGPASSWORD='S1lgang-Amu\ck' pg_dump \
 ```bash
 cd /Users/ianwyatt/PycharmProjects/Route-Playout-Econometrics_POC/backups
 
-PGPASSWORD='S1lgang-Amu\ck' pg_dump \
+PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
     -h 192.168.1.34 -U postgres -d route_poc \
     --format=custom \
     --compress=9 \
@@ -274,7 +274,7 @@ PGPASSWORD='S1lgang-Amu\ck' pg_dump \
 
 **Restore command:**
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' pg_restore \
+PGPASSWORD="$POSTGRES_PASSWORD" pg_restore \
     -h 192.168.1.34 -U postgres -d route_poc_restored \
     --jobs=4 \
     --verbose \

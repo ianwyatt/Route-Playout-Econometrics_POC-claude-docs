@@ -357,7 +357,7 @@ startstream
 psql -U ianwyatt -d route_poc -f migrations/004_create_mv_campaign_browser_summary.sql
 
 # MS-01
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc \
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc \
   -f migrations/004_create_mv_campaign_browser_summary.sql
 ```
 

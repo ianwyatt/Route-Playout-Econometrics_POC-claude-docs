@@ -585,7 +585,7 @@ DB_HOST=192.168.1.34
 DB_PORT=5432
 DB_NAME=route_poc
 DB_USER=postgres
-DB_PASSWORD=S1lgang-Amu\ck
+DB_PASSWORD=[REDACTED]
 
 # Cache mode
 USE_CACHE_FIRST=true (optional, defaults to true)

@@ -135,7 +135,7 @@ efd2373 feat: redesign Dataset Summary with HTML table layout
 
 ### Connection
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc
 ```
 
 ---

@@ -146,13 +146,13 @@ Identified campaigns: 16932, 16873, 17618, 16876, 18295, 18143, 18531, 18604, 17
 **Host**: 192.168.1.34:5432
 **Database**: route_poc
 **User**: postgres
-**Password**: S1lgang-Amu\ck (stored in `.env`)
+**Password**: [REDACTED] (stored in `.env`)
 
 **Environment Variable**: `USE_MS01_DATABASE=true` (already set)
 
 **Connection String**:
 ```
-postgresql://postgres:S1lgang-Amu\ck@192.168.1.34:5432/route_poc
+postgresql://postgres:[REDACTED]@192.168.1.34:5432/route_poc
 ```
 
 ---

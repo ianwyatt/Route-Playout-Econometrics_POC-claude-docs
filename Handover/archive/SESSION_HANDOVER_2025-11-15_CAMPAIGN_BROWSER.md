@@ -566,7 +566,7 @@ POSTGRES_HOST_MS01=192.168.1.34
 POSTGRES_PORT_MS01=5432
 POSTGRES_DATABASE_MS01=route_poc
 POSTGRES_USER_MS01=postgres
-POSTGRES_PASSWORD_MS01=S1lgang-Amu\ck
+POSTGRES_PASSWORD_MS01="$POSTGRES_PASSWORD"
 ```
 
 **Local Mac (Development)**:
@@ -592,7 +592,7 @@ streamlit run src/ui/app_api_real.py --server.port 8504
 ### Database Connection Test
 ```bash
 # Test MS-01 connection
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"
 
 # Should return: 838
 ```
@@ -665,16 +665,16 @@ git push origin feature/phase-5-cache-first-integration
 ### Database Queries
 ```bash
 # Check campaign count
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"
 
 # Sample campaigns with brands
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT campaign_id, primary_brand, brand_count, total_playouts FROM mv_campaign_browser LIMIT 10;"
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT campaign_id, primary_brand, brand_count, total_playouts FROM mv_campaign_browser LIMIT 10;"
 
 # Check view size
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT pg_size_pretty(pg_total_relation_size('mv_campaign_browser'));"
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT pg_size_pretty(pg_total_relation_size('mv_campaign_browser'));"
 
 # Refresh materialized view (manual)
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_campaign_browser;"
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_campaign_browser;"
 ```
 
 ### Python Testing
@@ -737,7 +737,7 @@ for c in campaigns[:3]:
 1. Read this handover document completely
 2. Review `Claude/Documentation/CAMPAIGN_BROWSER_ENHANCEMENT_PLAN.md` (Phase 10.5.3 section)
 3. Check current git status: `git status`
-4. Verify database connection: `PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"`
+4. Verify database connection: `PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT COUNT(*) FROM mv_campaign_browser;"`
 5. Start implementing Phase 10.5.3 as described above
 6. Test thoroughly before committing
 7. Update this handover file with results

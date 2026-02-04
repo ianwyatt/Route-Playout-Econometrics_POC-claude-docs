@@ -36,7 +36,7 @@ New shell script for ad-hoc refreshes with:
 
 **Usage**:
 ```bash
-PGPASSWORD='your_password' ./scripts/refresh_mv_campaign_browser.sh
+PGPASSWORD="$POSTGRES_PASSWORD" ./scripts/refresh_mv_campaign_browser.sh
 ```
 
 ---

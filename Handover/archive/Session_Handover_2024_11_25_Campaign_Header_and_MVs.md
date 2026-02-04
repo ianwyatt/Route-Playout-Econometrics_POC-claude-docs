@@ -398,7 +398,7 @@ psql -U ianwyatt -d route_poc -c "REFRESH MATERIALIZED VIEW mv_campaign_browser_
 
 ### Refresh Materialized Views (MS-01)
 ```bash
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc -c "
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc -c "
 REFRESH MATERIALIZED VIEW mv_cache_campaign_impacts_frame_day;
 REFRESH MATERIALIZED VIEW mv_cache_campaign_impacts_frame_1hr;
 REFRESH MATERIALIZED VIEW mv_campaign_browser_summary;
@@ -411,7 +411,7 @@ REFRESH MATERIALIZED VIEW mv_campaign_browser_summary;
 psql -U ianwyatt -d route_poc -f migrations/004_create_mv_campaign_browser_summary.sql
 
 # MS-01
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc \
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc \
   -f migrations/004_create_mv_campaign_browser_summary.sql
 ```
 

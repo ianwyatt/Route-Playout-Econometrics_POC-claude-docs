@@ -279,7 +279,7 @@ If you need to run the migration manually:
 cd /Users/ianwyatt/PycharmProjects/Route-Playout-Econometrics_POC
 
 # Run with parallel worker fix (CRITICAL - prevents deadlock)
-PGPASSWORD='S1lgang-Amu\ck' psql -h 192.168.1.34 -U postgres -d route_poc <<'EOF'
+PGPASSWORD="$POSTGRES_PASSWORD" psql -h 192.168.1.34 -U postgres -d route_poc <<'EOF'
 SET max_parallel_workers_per_gather = 0;
 SET max_parallel_workers = 0;
 \i migrations/003_create_mv_campaign_browser.sql
