@@ -21,338 +21,118 @@
 
 ## CRITICAL: Two Separate Repos
 
-**YOU ARE CURRENTLY IN THE DOCS REPO** (`Route-Playout-Econometrics_POC-claude-docs`)
-
 | Repo | What Goes Here | Where to Push |
 |------|----------------|---------------|
 | **Code repo** | Python, Streamlit, src/, tests/ | GitHub + Gitea |
 | **Docs repo** (this one) | CLAUDE.md, handovers, todos | **Gitea ONLY** |
 
-### Committing Code Changes
 ```bash
+# Code changes
 cd ~/PycharmProjects/Route-Playout-Econometrics_POC
 git add . && git commit -m "feat: whatever"
-git push origin main      # GitHub
-git push zimacube main    # Gitea mirror
-```
+git push origin main && git push zimacube main
 
-### Committing Doc Changes (handovers, todos, this file)
-```bash
+# Doc changes
 cd ~/PycharmProjects/Route-Playout-Econometrics_POC-claude-docs
-# OR: cd .claude (from code repo - it's a symlink)
 git add . && git commit -m "docs: session handover"
-git push origin main      # Gitea ONLY - hooks block GitHub
-```
-
-### Why Split?
-- CLAUDE.md contains internal project context not suitable for public GitHub
-- Session handovers are private working documents
-- Code repo stays clean for external sharing
-
-### Docs Repo Structure
-```
-Route-Playout-Econometrics_POC-claude-docs/
-├── CLAUDE.md        # This file - project instructions
-├── SETUP.md         # New machine setup guide
-├── config/          # hooks.json, settings
-├── hooks/           # Git hooks (enforce split repo rules)
-├── skills/          # Claude Code skills
-├── handover/        # Session handovers
-├── todo/            # Task tracking
-├── docs/            # Working documentation
-├── reference/       # Research, external refs
-└── archive/         # Old content
+git push origin main      # Gitea ONLY
 ```
 
 **New machine setup:** See `SETUP.md`
 
 ---
 
-## Commit Rules - READ FIRST
+## Commit Rules
 
-**NEVER commit without explicit user approval.**
-
-- Do NOT auto-commit after completing a task
-- Do NOT commit "for safety" or "to preserve work"
-- WAIT for the user to say "commit", "commit and push", or similar explicit instruction
-- If unsure, ASK before committing
-
-This rule exists because premature commits disrupt the user's workflow and version control strategy.
+**NEVER commit without explicit user approval.** Wait for "commit" or "commit and push".
 
 ---
 
 ## Project Scope
 
-**This POC focuses exclusively on:**
-- User interface for campaign analysis (Streamlit)
-- Read-only queries against PostgreSQL cache tables
-- Data visualisation and interactive mapping
-- Data export capabilities (CSV, Excel)
-- Query interface for econometricians
+**This POC is a read-only query interface:**
+- Streamlit UI for campaign analysis
+- Queries PostgreSQL materialised views (no API calls)
+- Data export (CSV, Excel)
+- For econometricians to browse campaigns and export audience data
 
-**Pipeline work (data ingestion, processing) is handled separately:**
-- Repository: `route-playout-pipeline` (separate GitHub repo)
-- Populates PostgreSQL database that this POC queries
+**Pipeline work is separate:** `route-playout-pipeline` repo populates the database.
 
 ---
 
-## Documentation Locations
+## Documentation
 
-- **Architecture**: `docs/01-architecture.md`
-- **UI Guide**: `docs/02-ui-guide.md`
-- **Demo Mode**: `docs/03-demo-mode.md`
-- **Cache Integration**: `docs/04-cache-integration.md`
-- **Playout Schema** (archived): `reference/playout-file-formats/` in claude-docs repo
-- **API Reference** (archived): `docs/archive/api-reference/` — Route and SPACE API docs for reference only; this POC never calls APIs directly
-
----
-
-## Core Functionality
-
-**Primary Use Case**: Econometrician enters Campaign ID (buyercampaignref) → System queries PostgreSQL cache for audience data → Presents metrics and allows export.
-
-**Architecture**: Cache-only design - all data served from PostgreSQL materialised views. No live API calls are made by this application.
-
-**Aggregation Levels**: By day, time period, environment, media owner
-
-**Key Features**:
-- Filter by: time period, geography, brand, buyer, agency, campaign ID, media owner, frame characteristics
-- Geographic filters: GPS coordinates, TV Region, Town, Conurbation, Postal Sector
-- Demographics: ABC1, C2DE, Age bands (15-34, 35-54, 55+), custom filters
-- Export: CSV, Excel, Parquet, API access
-- Interactive maps, dashboards, heatmaps
-
-**Frame Coverage**: Digital frames only (classic frames are future enhancement)
-
----
-
-## Data Sources
-
-### 1. PostgreSQL Database
-Primary data store for playout records and cached API responses.
-
-### 2. Route API
-- **Endpoint**: `https://route.mediatelapi.co.uk/`
-- **Purpose**: Audience measurement (impacts per frame playout)
-- **Important**: Only use playout audiences endpoint. Do NOT retrieve reach-only data.
-- **Frames not in Route**: Assign zero audience (impacts = 0)
-
-### 3. SPACE API
-- **Endpoint**: `https://oohspace.co.uk/api`
-- **Purpose**: Decode playout data IDs
-- **Lookups**: `spacemediaownerid` → Media Owner, `spacebuyerid` → Buyer, `spaceagencyid` → Agency, `spacebrandid` → Brand, `frameid` → Frame Metadata
-- **Caching**: Cache lookups in PostgreSQL with 30-day expiration
-
----
-
-## Route API Integration
-
-> **Note**: Route API calls are handled by the `route-playout-pipeline` (separate repo), not this POC.
-> This POC queries pre-cached data from PostgreSQL. The information below is for reference only.
-
-### Playout Endpoint
-**Endpoint**: `https://route.mediatelapi.co.uk/rest/process/playout`
-
-**Process** (handled by pipeline):
-1. Group frames by 15-minute intervals
-2. Call Route API with grouped frames
-3. Retrieve impacts per frame
-4. Cache results in PostgreSQL
-
-**Time Conversion**: Playout `yyyy-mm-ddTHH:mm:ss.SSS` → Route API `YYYY-MM-DD HH:MM:SS`
-
-### API Request Example
-```json
-{
-  "route_release_id": "55",
-  "route_algorithm_version": "10.2",
-  "algorithm_figures": ["impacts"],
-  "grouping": "frame_ID",
-  "demographics": ["ageband>=1"],
-  "campaign": [{
-    "schedule": [{"datetime_from": "2025-07-28 00:00", "datetime_until": "2025-07-28 00:14"}],
-    "spot_length": 10,
-    "spot_break_length": 50,
-    "frames": [1234723633, 2000032505]
-  }],
-  "target_month": 1
-}
-```
-
----
-
-## Technology Stack
-
-- **Language**: Python 3.11+
-- **Web Framework**: Streamlit
-- **Database**: PostgreSQL
-- **Package Manager**: UV (recommended) or pip
-
-### Application
-- `app.py`: Production app with cache-first data access
-- **Demo mode**: `DEMO_MODE=true` anonymises brand names for presentations
-
-### Performance (December 2025)
-
-| Operation | Response Time |
-|-----------|---------------|
-| Campaign browser | <100ms |
-| Frame Audiences (initial) | <100ms |
-| Frame Audiences (full daily) | <5s |
-| Tab switching | Instant |
-
-### Security
-- Pre-commit hooks prevent credential commits
-- All secrets in `.env` files (gitignored)
-- See `.env.example` for configuration template
-
----
-
-## Coding Style Guidelines
-
-### Modularity and Reusability
-
-**Prefer modular, reusable code over monolithic implementations.**
-
-#### UI Structure (`src/ui/`)
-- **`components/`** - Reusable UI elements (charts, tables, maps)
-- **`tabs/`** - Page-level tab implementations that compose components
-- **`config/`** - Configuration and constants (colors, demographics)
-- **`data/`** - Geographic reference data
-
-#### Guidelines
-1. Check `src/ui/components/` for existing chart/map functions first
-2. Extract reusable chart logic to `components/` with generic parameters
-3. Keep tab files focused on layout and data orchestration
-4. Keep SQL in query functions (`src/db/`), not scattered in UI code
-5. Use `src/ui/config/` for shared colors, constants, settings
-
-#### Refactor When
-- Same chart pattern appears in 2+ tabs
-- Inline Plotly code exceeds 30 lines
-- Color values hardcoded in multiple places
-
----
-
-## Route Releases Reference
-
-**Query Available Releases**: `POST https://route.mediatelapi.co.uk/rest/version` (last 5 releases only)
-
-| Name    | Release | Trading Period Start | Trading Period End |
-|---------|---------|---------------------|-------------------|
-| Q1 2025 | R54     | 07/04/2025          | 29/06/2025        |
-| Q2 2025 | R55     | 30/06/2025          | 28/09/2025        |
-| Q3 2025 | R56     | 29/09/2025          | 04/01/2026        |
-| Q4 2025 | R57     | 05/01/2026          | 29/03/2026        |
-| Q1 2026 | R58     | 30/03/2026          | 28/06/2026        |
-| Q2 2026 | R59     | 29/06/2026          | 27/09/2026        |
-| Q3 2026 | R60     | 28/09/2026          | 03/01/2027        |
-| Q4 2026 | R61     | 04/01/2027          | 04/04/2027        |
+| Location | Content |
+|----------|---------|
+| `docs/01-architecture.md` | System architecture |
+| `docs/02-ui-guide.md` | UI code patterns |
+| `docs/03-demo-mode.md` | Brand anonymisation |
+| `docs/04-cache-integration.md` | Cache query patterns |
+| `reference/route-api-reference.md` | Route/SPACE API details (pipeline reference) |
+| `reference/playout-file-formats/` | Playout schema docs |
 
 ---
 
 ## Quick Reference
 
 ### Run Application
-```bash
-# Normal mode
-startstream
-
-# Demo mode (brands anonymised for presentations)
-startstream demo
-
-# Or manually:
-USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504
-```
-
-### Environment
-See `.env.example` for required variables (database credentials only).
-
-### Manual Streamlit App Management
-
-**IMPORTANT**: The Streamlit app is now managed manually by the user in their terminal (not via Claude Code background processes). This prevents context pollution from background process tracking.
-
-**Recommended workflow** (using shell function in `~/.zshrc`):
 
 ```bash
-# Start app (primary database, normal mode) - auto-stops any running instance
-startstream
-
-# Start in demo mode (brands anonymised for presentations)
-startstream demo
-
-# Start with secondary database
-startstream local
-
-# Start secondary database in demo mode
-startstream local demo
-
-# Stop all Streamlit processes (if needed separately)
-stopstream
+startstream              # Primary database
+startstream demo         # Primary + brand anonymisation
+startstream local        # Secondary database
+startstream local demo   # Secondary + brand anonymisation
+stopstream               # Stop all instances
 ```
 
-| Command | Database | Demo Mode |
-|---------|----------|-----------|
-| `startstream` | Primary | Off |
-| `startstream demo` | Primary | On |
-| `startstream local` | Secondary | Off |
-| `startstream local demo` | Secondary | On |
+Or manually: `USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504`
 
-**Shell function defined** (in `~/.zshrc`):
+### Shell Function (in `~/.zshrc`)
 
 ```bash
 alias stopstream='pkill -f "streamlit run"'
 
 startstream() {
     pkill -f "streamlit run" 2>/dev/null
-    sleep 1  # Give port time to be released
-
-    local use_primary="true"
-    local demo_mode="false"
-    local db_name="Primary"
-
+    sleep 1
+    local use_primary="true" demo_mode="false" db_name="Primary"
     for arg in "$@"; do
         case "$arg" in
             demo)  demo_mode="true" ;;
             local) use_primary="false"; db_name="Local" ;;
         esac
     done
-
     USE_PRIMARY_DATABASE=$use_primary DEMO_MODE=$demo_mode streamlit run src/ui/app.py --server.port 8504 &
-
     local msg="Started on $db_name database"
-    [[ "$demo_mode" == "true" ]] && msg="$msg (DEMO MODE - brands anonymised)"
+    [[ "$demo_mode" == "true" ]] && msg="$msg (DEMO MODE)"
     echo "$msg"
 }
 ```
 
-**Manual command** (if not using shell function):
-```bash
-# Normal mode
-USE_PRIMARY_DATABASE=true streamlit run src/ui/app.py --server.port 8504 &
-
-# Demo mode (brands anonymised)
-USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.py --server.port 8504 &
-
-# Health check
-curl http://localhost:8504/_stcore/health
-```
-
-**Why manual management?**: Running Streamlit via Claude Code's background bash processes creates 90+ context-consuming reminders that exhaust the conversation token budget quickly. Running in the user's terminal avoids this issue.
+**Why manual?** Running Streamlit via Claude Code background processes exhausts conversation token budget.
 
 ---
 
-## Future Enhancements
+## Coding Guidelines
 
-- Cost and financial tracking (rate cards, CPM, cost per GRP)
-- Natural language query interface
-- AI-powered insights (OpenAI/Claude integration)
-- Classic frame support (static/scroller)
-- Multi-user support with role-based access
-- Demographic filtering for Weekly Reach/GRP tab (requires Route API backfill for demographic-specific reach calculations)
-- User authentication (Pocket ID - passkey-only OIDC)
-- User areas with saved campaigns and history
+### UI Structure (`src/ui/`)
+- **`components/`** — Reusable UI elements (charts, tables, maps)
+- **`tabs/`** — Page-level tab implementations
+- **`config/`** — Configuration and constants
+
+### Rules
+1. Check `src/ui/components/` for existing functions before creating new ones
+2. Keep SQL in `src/db/`, not scattered in UI code
+3. Extract reusable chart logic to `components/`
 
 ---
 
-*Last Updated: February 4, 2026*
+## Technology Stack
+
+- **Python 3.11+** / **Streamlit** / **PostgreSQL**
+- **Package Manager**: UV (recommended)
+- **Demo mode**: `DEMO_MODE=true` anonymises brand names
+
+---
+
+*Last Updated: February 2026*
