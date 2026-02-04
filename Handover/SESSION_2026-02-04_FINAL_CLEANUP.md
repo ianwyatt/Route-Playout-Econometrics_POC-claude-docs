@@ -103,16 +103,38 @@ deleted:    tests/unit/test_cache_service.py
 
 ## Claude Docs Updated
 
-- `CLAUDE.md`: Fixed outdated `docs/playout/` reference → `reference/playout-file-formats/`
+### CLAUDE.md Condensed (359 → 139 lines)
+
+| Removed/Moved | Destination |
+|---------------|-------------|
+| Route API Integration section | `reference/route-api-reference.md` |
+| Route Releases table | `reference/route-api-reference.md` |
+| SPACE API details | `reference/route-api-reference.md` |
+| Data Sources section | Condensed into Project Scope |
+| Core Functionality details | Condensed into Project Scope |
+| Performance table | Removed (dated) |
+| Future Enhancements | Removed (contradicts cleanup) |
+| Duplicate startstream examples | Consolidated |
+
+### Other Updates
+- Fixed outdated `docs/playout/` reference → `reference/playout-file-formats/`
+- Created `reference/route-api-reference.md` for pipeline reference material
 
 ---
 
 ## Commits
 
+### Code Repo (GitHub + Gitea)
 | Hash | Message |
 |------|---------|
 | `bcdd180` | refactor: remove pipeline db_helpers (archived to docs repo) |
 | `0c1e8d9` | refactor: final cleanup — remove dead code, AI refs, temporal comments |
+
+### Docs Repo (Gitea only)
+| Hash | Message |
+|------|---------|
+| `216ed66` | docs: final cleanup handover and CLAUDE.md fix |
+| `392473e` | docs: condense CLAUDE.md, move API reference to reference/ |
 
 ---
 
