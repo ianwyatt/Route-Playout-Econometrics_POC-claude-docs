@@ -1,27 +1,26 @@
 # Upcoming Tasks
 
-## Immediate: Commit and Push All Codex Review Fixes
+## Completed: Codex Code Review Fixes (6 Rounds)
 
-**Status**: All code changes complete (12 findings across 5 rounds), awaiting Doctor Biz approval to commit
-
-**Score progression**: 6.4 → 7.0 → 7.2 → 7.4 → 7.6 → TBD (Round 6 pending)
-
-**Proposed Commit** (code repo — GitHub + Gitea):
-```
-fix: thread use_primary consistently across entire UI, add export logging, consolidate brand formatting
-```
-
-**Manual verification needed**:
-1. `startstream local` → select campaign → verify all tabs show local DB data
-2. Export from any campaign → check logs for warnings (should be clean on happy path)
+All 12 actionable findings addressed across 6 rounds. Score progression: 6.4 → 7.8/10. Two commits pushed:
+1. `fix: thread use_primary consistently across entire UI, add export logging, consolidate brand formatting`
+2. `refactor: remove unused imports, dead code, and redundant comments`
 
 ---
 
-## Immediate: Codex Round 6 Review
+## Completed: Documentation Archival
 
-**Status**: Prompt prepared in `code reviews/Codex_re-review_prompt_2026-02-04_round6.md`
+- 50+ pre-2026 handover files archived to `handover/archive/`
+- 11 completed todo files archived to `todo/archive/`
+- 12 outdated docs archived to `docs/Documentation/Archive/`
+- Adwanted sharing guide created at `docs/SHARING_GUIDE_ADWANTED.md`
 
-Submit to ChatGPT Codex for final verification. All active code paths now thread `use_primary` consistently, including the export dialog (Round 5 fix).
+---
+
+## Pending: Manual Verification
+
+1. `startstream local` → select campaign → verify all tabs show local DB data
+2. Export from any campaign → check logs for warnings (should be clean on happy path)
 
 ---
 
@@ -57,6 +56,15 @@ These should be investigated and fixed separately.
 - `src/db/streamlit_queries.py` - May need new query for daily cumulative data
 
 **Database Table**: `cache_campaign_reach_day_cumulative`
+
+---
+
+## Future: Share with Adwanted
+
+See `docs/SHARING_GUIDE_ADWANTED.md` for full instructions on:
+- Adding Adwanted as GitHub collaborator
+- Database export/restore options
+- Environment setup and running the app
 
 ---
 

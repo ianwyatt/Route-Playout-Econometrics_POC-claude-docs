@@ -1,10 +1,10 @@
-# Session Handover: Codex Code Review Fixes (5 Rounds)
+# Session Handover: Codex Code Review Fixes (6 Rounds) + Linting Cleanup
 
 **Date**: 4 February 2026
 **Session**: Follows the Third-Party Handover Cleanup session (same day, earlier)
-**Status**: All code changes complete — NOT YET COMMITTED
+**Status**: All changes committed and pushed
 **Branch**: `main` (code repo)
-**Triggered by**: ChatGPT Codex deep code review — iterative improvement across 5 rounds
+**Triggered by**: ChatGPT Codex deep code review — iterative improvement across 6 rounds
 
 ---
 
@@ -17,13 +17,13 @@
 | 3 | 7.2/10 | 4 new findings | All fixed |
 | 4 | 7.4/10 | 3 findings | All non-actionable (archive/speculative) — successfully challenged |
 | 5 | 7.6/10 | 1 new finding | Fixed |
-| 6 | TBD | Prompt prepared | Awaiting Codex review |
+| 6 | 7.8/10 | 2 findings | Fixed (final commit) |
 
 ---
 
 ## Summary
 
-Addressed all 12 actionable findings across 5 rounds of Codex code review. The fixes ensure consistent `use_primary` database selection threading across the entire UI layer (including exports), add visibility to export failures, and consolidate duplicated brand formatting logic.
+Addressed all 12 actionable findings across 6 rounds of Codex code review (6.4 → 7.8/10). The fixes ensure consistent `use_primary` database selection threading across the entire UI layer (including exports), add visibility to export failures, and consolidate duplicated brand formatting logic. A follow-up linting pass removed 12 unused imports, 5 unused variables, ~15 redundant comments, and an `if True:` dead code guard.
 
 ---
 
@@ -266,13 +266,64 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>
 
 ---
 
+### Round 6 Fix + Linting Cleanup
+
+**Triggered by**: Codex re-review scored 7.8/10, found 2 remaining issues
+
+#### Round 6 Fixes
+- Threaded `use_primary` consistently through remaining UI paths identified by deep rescan
+- Added export logging for audit trail
+
+**Commit**: `fix: thread use_primary consistently across entire UI, add export logging, consolidate brand formatting`
+
+#### Linting Cleanup Pass
+
+Separate commit after all Codex rounds were complete. Targeted flake8 warnings across the 6 most-modified UI files.
+
+**Files cleaned**:
+| File | Changes |
+|------|---------|
+| `src/ui/app.py` | Removed 6 unused imports, ~10 redundant comments |
+| `src/ui/components/campaign_browser/summary.py` | Removed `if True:` dead code guard, un-indented block |
+| `src/ui/tabs/detailed_analysis.py` | Removed unused `Any` import |
+| `src/ui/tabs/executive_summary.py` | Removed unused `plotly.express`, `datetime` imports; removed unused `impacts_per_frame` variable |
+| `src/ui/tabs/geographic.py` | Removed unused `plotly.graph_objects`, `DEMOGRAPHIC_NAMES` imports |
+| `src/ui/tabs/overview.py` | Removed unused `datetime` import; removed 4 unused variables (`campaign_id`, `processing_time`, `approx_method`, `total_observations`) |
+
+**Commit**: `refactor: remove unused imports, dead code, and redundant comments`
+
+---
+
+## Session Wrap-Up
+
+### Documentation Archival
+- Moved 50+ pre-2026 handover files to `handover/archive/`
+- Moved 11 completed todo files to `todo/archive/`
+- Moved 12 outdated documentation files to `docs/Documentation/Archive/`
+- Board presentation materials archived (demo complete)
+
+### Sharing Guide
+- Created `docs/SHARING_GUIDE_ADWANTED.md` with instructions for:
+  - GitHub repository access
+  - PostgreSQL database export/restore
+  - Environment setup and running the application
+  - Scope clarification (read-only cache viewer, no pipeline)
+
+### Final Code Quality State
+- **Flake8**: Zero warnings across all modified files
+- **Unit tests**: 66/66 passing
+- **Codex score**: 7.8/10 (up from 6.4 at start)
+- **All changes pushed** to GitHub + Gitea (code) and Gitea (docs)
+
+---
+
 ## For Next Session
 
-- Awaiting Round 6 Codex review (prompt: `code reviews/Codex_re-review_prompt_2026-02-04_round6.md`)
 - Manual verification: `startstream local` → select campaign → verify all tabs show local DB data
 - Manual verification: export from any campaign → check logs for warnings (should be clean on happy path)
+- Consider requesting Round 7 Codex review to push score toward 8.0+
 
 ---
 
 *Created: 4 February 2026*
-*Updated: 4 February 2026 — Added Rounds 2-5 fixes*
+*Updated: 4 February 2026 — Final session wrap-up with linting, archival, and sharing guide*
