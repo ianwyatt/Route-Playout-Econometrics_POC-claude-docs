@@ -1,0 +1,1519 @@
+⏺ Continuing with Phase 3 UI Layer updates. Let me first check the current state of the files
+   I need to edit.
+
+⏺ Read 3 files (ctrl+o to expand)
+
+⏺ Now let me read the remaining files that need Phase 3 updates.
+
+⏺ Read 5 files (ctrl+o to expand)
+
+⏺ Now let me also check the export files and the rest of reach_grp.py for ms01 references.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Good, I now have a comprehensive picture of all remaining MS01 references. Let me also read
+   the export files.
+
+⏺ Read 5 files (ctrl+o to expand)
+
+⏺ I have a comprehensive view of all remaining changes. Now let me make all the Phase 3
+  edits. I'll work through them in parallel where possible.
+
+  First, let me fix app.py env var, then update header.py, app_campaign_selector.py, and the
+  campaign browser files.
+
+⏺ Update(src/ui/app.py)
+  ⎿  Added 3 lines, removed 1 line
+      419
+      420      # Initialize database selection in session state from env var
+      421      if 'use_primary_database' not in st.session_state:
+      422 -        env_default = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tr
+          -ue'
+      422 +        env_default = (
+      423 +            os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABA
+          +SE') or 'true'
+      424 +        ).lower() == 'true'
+      425          st.session_state.use_primary_database = env_default
+      426
+      427      # Main content - Show campaign selector or analysis
+
+⏺ Update(src/ui/components/campaign_browser/header.py)
+  ⎿  Added 7 lines, removed 7 lines
+      16          st.markdown("#### 💾 Backend Database")
+      17          new_database = st.selectbox(
+      18              "Select Database:",
+      19 -            options=["MS-01 (Production)", "Local"],
+      20 -            index=0 if st.session_state.get('use_ms01_database', True) else
+         -1,
+      19 +            options=["Primary", "Secondary"],
+      20 +            index=0 if st.session_state.get('use_primary_database', True) el
+         +se 1,
+      21              key="config_database",
+      22 -            help="MS-01: Production cache database\nLocal: Local development
+         - database"
+      22 +            help="Primary: Production cache database\nSecondary: Development
+         + database"
+      23          )
+      24 -        use_ms01 = (new_database == "MS-01 (Production)")
+      25 -        if use_ms01 != st.session_state.get('use_ms01_database', True):
+      26 -            st.session_state.use_ms01_database = use_ms01
+      27 -            os.environ['USE_MS01_DATABASE'] = 'true' if use_ms01 else 'false
+         -'
+      24 +        use_primary = (new_database == "Primary")
+      25 +        if use_primary != st.session_state.get('use_primary_database', True)
+         +:
+      26 +            st.session_state.use_primary_database = use_primary
+      27 +            os.environ['USE_PRIMARY_DATABASE'] = 'true' if use_primary else
+         +'false'
+      28              st.info(f"Database switched to {new_database}. Please restart th
+          e app for changes to take full effect.")
+      29              st.rerun()
+      30
+
+⏺ Update(src/ui/components/campaign_browser/header.py)
+  ⎿  Added 3 lines, removed 1 line
+      47              pharos_b64 = base64.b64encode(f.read()).decode()
+      48
+      49      if is_demo_mode():
+      50 -        db_name = "MS01" if os.getenv('USE_MS01_DATABASE', 'false').lower()
+         -== 'true' else "Local"
+      50 +        db_name = "Primary" if (
+      51 +            os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABAS
+         +E') or 'false'
+      52 +        ).lower() == 'true' else "Secondary"
+      53
+      54          st.markdown(f'''
+      55          <style>
+
+⏺ Now update the campaign browser __init__.py, browse_tab.py, and data.py.
+
+⏺ Update(src/ui/components/campaign_browser/__init__.py)
+  ⎿  Added 3 lines, removed 3 lines
+      30      _render_header()
+      31
+      32      # Load summary early for key stats
+      33 -    use_ms01 = st.session_state.get('use_ms01_database', True)
+      34 -    summary = load_campaign_browser_summary(use_ms01=use_ms01)
+      33 +    use_primary = st.session_state.get('use_primary_database', True)
+      34 +    summary = load_campaign_browser_summary(use_primary=use_primary)
+      35
+      36      # Key stats (6 metrics)
+      37      _render_key_stats(summary)
+     ...
+      51
+      52      # Render selected tab content
+      53      if selected_tab == "Browse Campaigns":
+      54 -        _render_browse_tab(use_ms01, summary)
+      54 +        _render_browse_tab(use_primary, summary)
+      55      else:
+      56          _render_manual_input_tab()
+      57
+
+⏺ Update(src/ui/components/campaign_browser/__init__.py)
+  ⎿  Error editing file
+
+⏺ Update(src/ui/components/campaign_browser/browse_tab.py)
+  ⎿  Error editing file
+
+⏺ Update(src/ui/components/campaign_browser/data.py)
+  ⎿  Error editing file
+
+⏺ The replace_all for use_ms01 also caught use_ms01_database turning it into
+  use_primary_database — which is what we want. Let me verify and continue with the remaining
+   files.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Good, the __init__.py is clean. Now let me do the remaining files.
+
+⏺ Update(src/ui/components/campaign_browser/browse_tab.py)
+  ⎿  Added 3 lines, removed 3 lines
+      18  from .summary import _render_platform_features, _render_dataset_summary_cont
+          ent
+      19
+      20
+      21 -def _render_browse_tab(use_ms01: bool, summary: Optional[Dict] = None):
+      21 +def _render_browse_tab(use_primary: bool, summary: Optional[Dict] = None):
+      22      """Render the Browse Campaigns tab content."""
+      23      # Use passed summary or load if not provided
+      24      if summary is None:
+      25 -        summary = load_campaign_browser_summary(use_ms01=use_ms01)
+      25 +        summary = load_campaign_browser_summary(use_primary=use_primary)
+      26
+      27      # Initialise session state for showing table
+      28      if 'show_campaign_table' not in st.session_state:
+     ...
+      55          return
+      56
+      57      # Table is now shown - load campaigns
+      58 -    campaigns = load_campaigns(use_ms01=use_ms01)
+      58 +    campaigns = load_campaigns(use_primary=use_primary)
+      59
+      60      if not campaigns:
+      61          st.warning("No campaigns found in database.")
+
+⏺ Update(src/ui/components/campaign_browser/data.py)
+  ⎿  Added 4 lines, removed 4 lines
+      62
+      63
+      64  @st.cache_data(ttl=300)
+      65 -def load_campaigns(limit: int = 10000, use_ms01: bool = True) -> List[Dict]:
+      65 +def load_campaigns(limit: int = 10000, use_primary: bool = True) -> List[Dic
+         +t]:
+      66      """Load campaign list from database with brand information."""
+      67      try:
+      68 -        campaigns = get_campaigns_from_browser_sync(limit=limit, use_ms01=us
+         -e_ms01)
+      68 +        campaigns = get_campaigns_from_browser_sync(limit=limit, use_primary
+         +=use_primary)
+      69          return campaigns
+      70      except Exception as e:
+      71          st.error(f"Error loading campaigns: {e}")
+     ...
+      73
+      74
+      75  @st.cache_data(ttl=300)
+      76 -def load_campaign_browser_summary(use_ms01: bool = True) -> Optional[Dict]:
+      76 +def load_campaign_browser_summary(use_primary: bool = True) -> Optional[Dict
+         +]:
+      77      """Load campaign browser summary statistics from database."""
+      78      try:
+      79 -        summary = get_campaign_browser_summary_sync(use_ms01=use_ms01)
+      79 +        summary = get_campaign_browser_summary_sync(use_primary=use_primary)
+      80          return summary
+      81      except Exception as e:
+      82          st.error(f"Error loading campaign summary statistics: {e}")
+
+⏺ Now update the tabs and export files.
+
+⏺ Update(src/ui/tabs/executive_summary.py)
+  ⎿  Added 3 lines, removed 3 lines
+      170
+      171          # Import daily cumulative data loader (with weekly fallback)
+      172          from src.ui.app import load_daily_cumulative_reach, load_weekly_rea
+           ch_data
+      173 -        use_ms01 = st.session_state.get('use_ms01_database', True)
+      174 -        daily_cumulative = load_daily_cumulative_reach(campaign_id, use_ms0
+          -1=use_ms01)
+      173 +        use_primary = st.session_state.get('use_primary_database', True)
+      174 +        daily_cumulative = load_daily_cumulative_reach(campaign_id, use_pri
+          +mary=use_primary)
+      175
+      176          if daily_cumulative:
+      177              # Use daily data for smooth curves
+     ...
+      251                  st.caption("⚠️ Reach data unavailable")
+      252          else:
+      253              # Fallback to weekly data if daily not available
+      254 -            weekly_data = load_weekly_reach_data(campaign_id, use_ms01=use_
+          -ms01)
+      254 +            weekly_data = load_weekly_reach_data(campaign_id, use_primary=u
+          +se_primary)
+      255              if weekly_data:
+      256                  cumulative_weeks = [w for w in weekly_data if w.get('reach_
+           type') == 'cumulative']
+      257                  if cumulative_weeks:
+
+⏺ Update(src/ui/tabs/reach_grp.py)
+  ⎿  Added 3 lines, removed 3 lines
+      24      from src.ui.app import load_weekly_reach_data, load_daily_cumulative_rea
+          ch
+      25
+      26      # Fetch weekly reach data (cached) with loading feedback
+      27 -    use_ms01 = st.session_state.get('use_ms01_database', True)
+      27 +    use_primary = st.session_state.get('use_primary_database', True)
+      28      with st.spinner("Loading weekly reach data..."):
+      29 -        weekly_data = load_weekly_reach_data(campaign_id, use_ms01=use_ms01)
+      29 +        weekly_data = load_weekly_reach_data(campaign_id, use_primary=use_pr
+         +imary)
+      30      if not weekly_data:
+      31          st.warning(f"No weekly reach data available for campaign {campaign_i
+          d}")
+      32          return
+     ...
+      177      # Cumulative Build Chart - prefer daily data for smooth curves
+      178      st.markdown("##### Cumulative Build")
+      179
+      180 -    daily_cumulative = load_daily_cumulative_reach(campaign_id, use_ms01=us
+          -e_ms01)
+      180 +    daily_cumulative = load_daily_cumulative_reach(campaign_id, use_primary
+          +=use_primary)
+      181
+      182      if daily_cumulative:
+      183          # Use daily data for smooth curves
+
+⏺ Update(src/ui/utils/export/data.py)
+  ⎿  Added 7 lines, removed 7 lines
+      25  }
+      26
+      27
+      28 -def gather_campaign_data(campaign_id: str, use_ms01: bool = None) -> Dict[st
+         -r, pd.DataFrame]:
+      28 +def gather_campaign_data(campaign_id: str, use_primary: bool = None) -> Dict
+         +[str, pd.DataFrame]:
+      29      """Gather all campaign data from database queries into DataFrames.
+      30
+      31      Returns a dictionary mapping dataset names to DataFrames.
+      32      """
+      33      import os
+      34 -    if use_ms01 is None:
+      35 -        use_ms01 = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'true'
+      34 +    if use_primary is None:
+      35 +        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         +e'
+      36
+      37      datasets = {}
+      38
+      39      # 1. Frame Audience Table (Overview tab)
+      40      try:
+      41 -        frame_data = get_frame_audience_table_sync(campaign_id, use_ms01=use
+         -_ms01)
+      41 +        frame_data = get_frame_audience_table_sync(campaign_id, use_primary=
+         +use_primary)
+      42          if frame_data:
+      43              datasets['frame_audience_summary'] = pd.DataFrame(frame_data)
+      44      except Exception:
+     ...
+      46
+      47      # 2. Weekly Reach Data (Weekly Reach tab)
+      48      try:
+      49 -        weekly_data = get_weekly_reach_data_sync(campaign_id, use_ms01=use_m
+         -s01)
+      49 +        weekly_data = get_weekly_reach_data_sync(campaign_id, use_primary=us
+         +e_primary)
+      50          if weekly_data:
+      51              df_weekly = pd.DataFrame(weekly_data)
+      52              # Separate individual and cumulative weeks
+     ...
+      62
+      63      # 3. Daily Impacts (Time Series tab)
+      64      try:
+      65 -        daily_data = get_daily_impacts_sync(campaign_id, use_ms01=use_ms01)
+      65 +        daily_data = get_daily_impacts_sync(campaign_id, use_primary=use_pri
+         +mary)
+      66          if daily_data:
+      67              df = pd.DataFrame(daily_data)
+      68              # Remove intervals column if present (internal use only)
+     ...
+      74
+      75      # 4. Hourly Impacts (Time Series tab)
+      76      try:
+      77 -        hourly_data = get_hourly_impacts_sync(campaign_id, use_ms01=use_ms01
+         -)
+      77 +        hourly_data = get_hourly_impacts_sync(campaign_id, use_primary=use_p
+         +rimary)
+      78          if hourly_data:
+      79              df = pd.DataFrame(hourly_data)
+      80              # Remove intervals column if present (internal use only)
+
+⏺ Update(src/ui/utils/export/excel.py)
+  ⎿  Added 5 lines, removed 5 lines
+      15      campaign_id: str,
+      16      campaign_result: Dict[str, Any] = None,
+      17      progress_callback: callable = None,
+      18 -    use_ms01: bool = None
+      18 +    use_primary: bool = None
+      19  ) -> bytes:
+      20      """Create an Excel file with multiple sheets containing all campaign dat
+          a.
+      21
+     ...
+      48
+      49      # Determine database to use
+      50      import os
+      51 -    if use_ms01 is None:
+      52 -        use_ms01 = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'true'
+      51 +    if use_primary is None:
+      52 +        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         +e'
+      53
+      54      # Get campaign info
+      55      report("Loading campaign info...")
+      56 -    campaign_info = get_campaign_header_info_sync(campaign_id, use_ms01=use_
+         -ms01)
+      56 +    campaign_info = get_campaign_header_info_sync(campaign_id, use_primary=u
+         +se_primary)
+      57
+      58      # Gather all data
+      59      report("Gathering campaign data...")
+      60 -    datasets = gather_campaign_data(campaign_id, use_ms01=use_ms01)
+      60 +    datasets = gather_campaign_data(campaign_id, use_primary=use_primary)
+      61
+      62      # Create Excel in memory
+      63      excel_buffer = io.BytesIO()
+
+⏺ Update(src/ui/utils/export/zip_export.py)
+  ⎿  Added 6 lines, removed 6 lines
+      13  from .charts import create_charts
+      14
+      15
+      16 -def create_export_zip(campaign_id: str, campaign_result: Dict[str, Any], use
+         -_ms01: bool = None) -> bytes:
+      16 +def create_export_zip(campaign_id: str, campaign_result: Dict[str, Any], use
+         +_primary: bool = None) -> bytes:
+      17      """Create a zip file containing all campaign data CSVs and chart images.
+      18
+      19      Args:
+      20          campaign_id: The campaign identifier
+      21          campaign_result: The campaign result dict from session state (for su
+          mmary info)
+      22 -        use_ms01: Whether to use MS-01 database. If None, reads from env var
+         -.
+      22 +        use_primary: Whether to use MS-01 database. If None, reads from env
+         +var.
+      23
+      24      Returns:
+      25          Bytes of the zip file
+      26      """
+      27      import os
+      28 -    if use_ms01 is None:
+      29 -        use_ms01 = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'true'
+      28 +    if use_primary is None:
+      29 +        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         +e'
+      30
+      31      # Get campaign info for filename
+      32 -    campaign_info = get_campaign_header_info_sync(campaign_id, use_ms01=use_
+         -ms01)
+      32 +    campaign_info = get_campaign_header_info_sync(campaign_id, use_primary=u
+         +se_primary)
+      33      timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+      34
+      35      # Gather all data
+      36 -    datasets = gather_campaign_data(campaign_id, use_ms01=use_ms01)
+      36 +    datasets = gather_campaign_data(campaign_id, use_primary=use_primary)
+      37
+      38      # Create charts
+      39      charts = create_charts(campaign_id, datasets)
+
+⏺ Now I need to fix the env var references in the export files and tabs. The replace_all only
+   changed variable/param names, but the os.getenv('USE_MS01_DATABASE'...) string literals
+  also need updating with fallback chains.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ I need to update the env var fallback in the export files, app_campaign_selector.py, and
+  zip_export.py. The header.py and app.py already have the fallback chain. The archive files
+  I'll leave alone per the plan (they're archived).
+
+⏺ Update(src/ui/utils/export/data.py)
+  ⎿  Added 3 lines, removed 1 line
+      32      """
+      33      import os
+      34      if use_primary is None:
+      35 -        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         -e'
+      35 +        use_primary = (
+      36 +            os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABAS
+         +E') or 'true'
+      37 +        ).lower() == 'true'
+      38
+      39      datasets = {}
+      40
+
+⏺ Update(src/ui/utils/export/excel.py)
+  ⎿  Added 3 lines, removed 1 line
+      49      # Determine database to use
+      50      import os
+      51      if use_primary is None:
+      52 -        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         -e'
+      52 +        use_primary = (
+      53 +            os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABAS
+         +E') or 'true'
+      54 +        ).lower() == 'true'
+      55
+      56      # Get campaign info
+      57      report("Loading campaign info...")
+
+⏺ Update(src/ui/utils/export/zip_export.py)
+  ⎿  Added 3 lines, removed 1 line
+      26      """
+      27      import os
+      28      if use_primary is None:
+      29 -        use_primary = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'tru
+         -e'
+      29 +        use_primary = (
+      30 +            os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABAS
+         +E') or 'true'
+      31 +        ).lower() == 'true'
+      32
+      33      # Get campaign info for filename
+      34      campaign_info = get_campaign_header_info_sync(campaign_id, use_primary=u
+          se_primary)
+
+⏺ Now update the zip_export.py docstring and the app_campaign_selector.py (the big standalone
+   file).
+
+⏺ Update(src/ui/utils/export/zip_export.py)
+  ⎿  Error editing file
+
+⏺ The replace_all already caught use_ms01 in the docstring. Let me check.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(src/ui/utils/export/zip_export.py)
+  ⎿  Added 1 line, removed 1 line
+      19      Args:
+      20          campaign_id: The campaign identifier
+      21          campaign_result: The campaign result dict from session state (for su
+          mmary info)
+      22 -        use_primary: Whether to use MS-01 database. If None, reads from env
+         -var.
+      22 +        use_primary: Whether to use primary database. If None, reads from en
+         +v var.
+      23
+      24      Returns:
+      25          Bytes of the zip file
+
+⏺ Now update app_campaign_selector.py — this needs the most changes (session state, labels,
+  env vars, status messages).
+
+⏺ Update(src/ui/app_campaign_selector.py)
+  ⎿  Added 13 lines, removed 13 lines
+      39      st.session_state.selected_campaign_id = None
+      40  if 'campaign_summary' not in st.session_state:
+      41      st.session_state.campaign_summary = None
+      42 -if 'use_ms01_database' not in st.session_state:
+      42 +if 'use_primary_database' not in st.session_state:
+      43      # Default from environment variable
+      44      default_db = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'true'
+      45 -    st.session_state.use_ms01_database = default_db
+      45 +    st.session_state.use_primary_database = default_db
+      46  if 'previous_db_selection' not in st.session_state:
+      47 -    st.session_state.previous_db_selection = st.session_state.use_ms01_datab
+         -ase
+      47 +    st.session_state.previous_db_selection = st.session_state.use_primary_da
+         +tabase
+      48
+      49
+      50  @st.cache_data(ttl=300)  # Cache for 5 minutes
+      51 -def load_campaigns(limit: int = 100, use_ms01: bool = True) -> List[Dict]:
+      51 +def load_campaigns(limit: int = 100, use_primary: bool = True) -> List[Dict]
+         +:
+      52      """Load campaign list from database."""
+      53      try:
+      54 -        campaigns = get_all_campaigns_sync(limit=limit, use_ms01=use_ms01)
+      54 +        campaigns = get_all_campaigns_sync(limit=limit, use_primary=use_prim
+         +ary)
+      55          return campaigns
+      56      except Exception as e:
+      57          st.error(f"Error loading campaigns: {e}")
+     ...
+      74      return f"{campaign_id} | {total_spots:,} playouts | {total_frames} frame
+          s | {date_range}"
+      75
+      76
+      77 -def load_campaign_summary(campaign_id: str, use_ms01: bool = True) -> Option
+         -al[Dict]:
+      77 +def load_campaign_summary(campaign_id: str, use_primary: bool = True) -> Opt
+         +ional[Dict]:
+      78      """Load detailed campaign summary."""
+      79      try:
+      80 -        summary = get_campaign_summary_sync(campaign_id, use_ms01=use_ms01)
+      80 +        summary = get_campaign_summary_sync(campaign_id, use_primary=use_pri
+         +mary)
+      81          return summary
+      82      except Exception as e:
+      83          st.error(f"Error loading campaign summary: {e}")
+     ...
+       95      }
+       96
+       97      # Get current selection name
+       98 -    current_selection = "MS-01 (Production)" if st.session_state.use_ms01_d
+          -atabase else "Local Mac (Development)"
+       98 +    current_selection = "MS-01 (Production)" if st.session_state.use_primar
+          +y_database else "Local Mac (Development)"
+       99
+      100      selected_db = st.radio(
+      101          "Select Database:",
+      102          options=list(db_options.keys()),
+      103 -        index=0 if st.session_state.use_ms01_database else 1,
+      103 +        index=0 if st.session_state.use_primary_database else 1,
+      104          key="database_selector"
+      105      )
+      106
+      107      # Update session state if changed
+      108      new_db_value = db_options[selected_db]
+      109      if new_db_value != st.session_state.previous_db_selection:
+      110 -        st.session_state.use_ms01_database = new_db_value
+      110 +        st.session_state.use_primary_database = new_db_value
+      111          st.session_state.previous_db_selection = new_db_value
+      112          # Clear cached data when switching databases
+      113          st.cache_data.clear()
+      114          st.rerun()
+      115
+      116      # Show database info
+      117 -    if st.session_state.use_ms01_database:
+      117 +    if st.session_state.use_primary_database:
+      118          st.success("✅ Connected to MS-01")
+      119          st.caption("1.28B records | Aug 6 - Oct 13, 2025")
+      120      else:
+     ...
+      143      st.info("Campaigns are sorted by most recent activity. Use the dropdown
+            to select a campaign.")
+      144
+      145      # Load campaigns from selected database
+      146 -    campaigns = load_campaigns(limit=100, use_ms01=st.session_state.use_ms0
+          -1_database)
+      146 +    campaigns = load_campaigns(limit=100, use_primary=st.session_state.use_
+          +primary_database)
+      147
+      148      if campaigns:
+      149          # Create dropdown options
+     ...
+      188      with st.spinner("Loading campaign details..."):
+      189          summary = load_campaign_summary(
+      190              st.session_state.selected_campaign_id,
+      191 -            use_ms01=st.session_state.use_ms01_database
+      191 +            use_primary=st.session_state.use_primary_database
+      192          )
+      193          st.session_state.campaign_summary = summary
+      194
+
+⏺ Now fix the remaining string literals in app_campaign_selector.py.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Good, now I need to update the env var fallback and the remaining string literals (MS-01,
+  Local Mac, 1.28B records).
+
+⏺ Update(src/ui/app_campaign_selector.py)
+  ⎿  Added 3 lines, removed 1 line
+      41      st.session_state.campaign_summary = None
+      42  if 'use_primary_database' not in st.session_state:
+      43      # Default from environment variable
+      44 -    default_db = os.getenv('USE_MS01_DATABASE', 'true').lower() == 'true'
+      44 +    default_db = (
+      45 +        os.getenv('USE_PRIMARY_DATABASE') or os.getenv('USE_MS01_DATABASE')
+         +or 'true'
+      46 +    ).lower() == 'true'
+      47      st.session_state.use_primary_database = default_db
+      48  if 'previous_db_selection' not in st.session_state:
+      49      st.session_state.previous_db_selection = st.session_state.use_primary_da
+          tabase
+
+⏺ Update(src/ui/app_campaign_selector.py)
+  ⎿  Added 3 lines, removed 3 lines
+       92
+       93      # Database selector
+       94      db_options = {
+       95 -        "MS-01 (Production)": True,
+       96 -        "Local Mac (Development)": False
+       95 +        "Primary": True,
+       96 +        "Secondary": False
+       97      }
+       98
+       99      # Get current selection name
+      100 -    current_selection = "MS-01 (Production)" if st.session_state.use_primar
+          -y_database else "Local Mac (Development)"
+      100 +    current_selection = "Primary" if st.session_state.use_primary_database
+          +else "Secondary"
+      101
+      102      selected_db = st.radio(
+      103          "Select Database:",
+
+⏺ Update(src/ui/app_campaign_selector.py)
+  ⎿  Added 2 lines, removed 4 lines
+      117
+      118      # Show database info
+      119      if st.session_state.use_primary_database:
+      120 -        st.success("✅ Connected to MS-01")
+      121 -        st.caption("1.28B records | Aug 6 - Oct 13, 2025")
+      120 +        st.success("✅ Connected to Primary")
+      121      else:
+      123 -        st.success("✅ Connected to Local Mac")
+      124 -        st.caption("~168M records | 1 week sample")
+      122 +        st.success("✅ Connected to Secondary")
+      123
+      124      st.markdown("---")
+      125      st.markdown("### About")
+
+⏺ Now I also need to update the use_primary_database session state references in
+  executive_summary.py and reach_grp.py (the replace_all changed use_ms01 → use_primary but
+  the session state key was use_ms01_database which became use_primary_database — let me
+  verify).
+
+⏺ Searched for 3 patterns (ctrl+o to expand)
+
+⏺ All the USE_MS01_DATABASE references are now only in fallback chains (backwards
+  compatibility) — exactly what we want. The tabs and components are clean.
+
+  Now let me do a broader check for any remaining ms01 references in the non-archive src/
+  code.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ The remaining MS01 references are in:
+  1. Backwards-compat fallback chains (expected — _env_with_fallback('...PRIMARY',
+  '...MS01'))
+  2. Backwards-compat aliases in db_helpers.py and __init__.py (expected)
+  3. ms01_helpers.py — the old file that should be deleted after we confirm everything works
+  4. README_MS01_HELPERS.md — needs renaming/rewriting (Phase 4)
+  5. paths.py — CLAUDE_MIGRATION_DIR reference (Phase 4)
+  6. archive/ files — we leave these alone
+  7. config.py — backwards compat fallback chains and is_ms01 key (expected)
+
+  Phase 3 is complete. Let me mark it and move to Phase 4.
+
+⏺ Now Phase 4: Configuration files. Let me read the files I need to update.
+
+⏺ Read 2 files (ctrl+o to expand)
+
+⏺ Now let me check if CLAUDE_MIGRATION_DIR is used anywhere.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ It's only defined and exported, not used elsewhere. I'll leave it as-is since it refers to
+  a directory name that may exist on disk. Let me now update .env.example and handle the
+  README file rename.
+
+⏺ Update(.env.example)
+  ⎿  Added 15 lines, removed 15 lines
+       7  # DATABASE CONFIGURATION
+       8  # ==========================================================================
+          ===
+       9
+      10 -# MS-01 Production Database (Default)
+      11 -POSTGRES_HOST_MS01=192.168.1.34
+      12 -POSTGRES_PORT_MS01=5432
+      13 -POSTGRES_DATABASE_MS01=route_poc
+      14 -POSTGRES_USER_MS01=postgres
+      15 -POSTGRES_PASSWORD_MS01=your_password_here
+      10 +# Primary Database
+      11 +POSTGRES_HOST_PRIMARY=your_host_here
+      12 +POSTGRES_PORT_PRIMARY=5432
+      13 +POSTGRES_DATABASE_PRIMARY=route_poc
+      14 +POSTGRES_USER_PRIMARY=postgres
+      15 +POSTGRES_PASSWORD_PRIMARY=your_password_here
+      16
+      17 -# Local Development Database
+      18 -POSTGRES_HOST_LOCAL=localhost
+      19 -POSTGRES_PORT_LOCAL=5432
+      20 -POSTGRES_DATABASE_LOCAL=route_poc
+      21 -POSTGRES_USER_LOCAL=postgres
+      22 -POSTGRES_PASSWORD_LOCAL=your_password_here
+      17 +# Secondary Database (Optional - for development/staging)
+      18 +POSTGRES_HOST_SECONDARY=localhost
+      19 +POSTGRES_PORT_SECONDARY=5432
+      20 +POSTGRES_DATABASE_SECONDARY=route_poc
+      21 +POSTGRES_USER_SECONDARY=postgres
+      22 +POSTGRES_PASSWORD_SECONDARY=your_password_here
+      23
+      24  # Database Selection
+      25 -# true = Use MS-01 production database (default)
+      26 -# false = Use local database
+      27 -USE_MS01_DATABASE=true
+      25 +# true = Use primary database (default)
+      26 +# false = Use secondary database
+      27 +USE_PRIMARY_DATABASE=true
+      28
+      29  # ==========================================================================
+          ===
+      30  # ROUTE API CONFIGURATION
+
+⏺ Update(.env.example)
+  ⎿  Added 1 line, removed 1 line
+       95  # =========================================================================
+           ====
+       96  #
+       97  # 1. Copy this file: cp .env.example .env
+       98 -# 2. Fill in database credentials (POSTGRES_PASSWORD_MS01 or _LOCAL)
+       98 +# 2. Fill in database credentials (POSTGRES_PASSWORD_PRIMARY or _SECONDARY)
+       99  # 3. Fill in API credentials (ROUTE_API_KEY, ROUTE_API_AUTH, SPACE_API_*)
+      100  # 4. Run the app: startstream (or startstream demo for presentations)
+      101  #
+
+⏺ Now rename the README_MS01_HELPERS.md file. Since this is a documentation file about the
+  old helpers, I'll create the new one and we can delete the old.
+
+⏺ Bash(mv /Users/ianwyatt/PycharmProjects/Route-Playout-Econometrics_POC/src/db/README_MS01_H
+      ELPERS.md /Users/ianwyatt/PycharmProjects/Route-Playout-Econometrics_POC/s…)
+  ⎿  (No content)
+
+⏺ Now update the content of the renamed README. Let me read the current state and update key
+  references.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ This README is quite long and references the old ms01_helpers.py extensively. Since it
+  documents the old module which still exists but is superseded by db_helpers.py, I should
+  update its title and key references to point to the new naming. Let me update the critical
+  parts.
+
+⏺ Update(src/db/README_DB_HELPERS.md)
+  ⎿  Added 18 lines, removed 19 lines
+       1 -# MS-01 Database Helper Functions
+       1 +# Database Helper Functions
+       2
+       3  ## Overview
+       4
+       5 -The `ms01_helpers.py` module provides optimized database query functions ada
+         -pted from the Route Playout Pipeline for use in the POC application. These f
+         -unctions query the MS-01 PostgreSQL database and are specifically designed f
+         -or Route API integration, campaign analysis, and brand-level reporting.
+       5 +The `db_helpers.py` module provides database query functions adapted from th
+         +e Route Playout Pipeline for use in the POC application. These functions que
+         +ry the PostgreSQL database and are designed for campaign analysis and brand-
+         +level reporting.
+       6
+       7  ## Key Features
+       8
+       9  - **Async-First Design**: All queries use asyncpg for optimal performance
+      10  - **Connection Pooling**: Efficient connection management via asyncpg connec
+          tion pools
+      11 -- **Environment-Aware**: Automatically switches between MS-01 and local data
+         -bases based on `USE_MS01_DATABASE` env var
+      12 -- **Route API Ready**: Functions return data in formats optimized for Route
+         -API calls
+      13 -- **Production Tested**: Adapted from battle-tested pipeline code handling 1
+         -.28B records
+      11 +- **Environment-Aware**: Automatically switches between primary and secondar
+         +y databases based on `USE_PRIMARY_DATABASE` env var
+      12 +- **Backwards Compatible**: Falls back to legacy `USE_MS01_DATABASE` env var
+         +s if new names not set
+      13
+      14  ## Database Configuration
+      15
+      16  The module automatically configures database connections based on environmen
+          t variables:
+      17
+      18  ```python
+      20 -# MS-01 Database (Production)
+      21 -USE_MS01_DATABASE=true
+      22 -POSTGRES_HOST_MS01=192.168.1.34
+      23 -POSTGRES_PORT_MS01=5432
+      24 -POSTGRES_DATABASE_MS01=route_poc
+      25 -POSTGRES_USER_MS01=postgres
+      26 -POSTGRES_PASSWORD_MS01=<password>
+      19 +# Primary Database
+      20 +USE_PRIMARY_DATABASE=true
+      21 +POSTGRES_HOST_PRIMARY=your_host_here
+      22 +POSTGRES_PORT_PRIMARY=5432
+      23 +POSTGRES_DATABASE_PRIMARY=route_poc
+      24 +POSTGRES_USER_PRIMARY=postgres
+      25 +POSTGRES_PASSWORD_PRIMARY=<password>
+      26
+      28 -# Local Database (Development/Testing)
+      29 -USE_MS01_DATABASE=false
+      30 -POSTGRES_HOST_LOCAL=localhost
+      31 -POSTGRES_PORT_LOCAL=5432
+      32 -POSTGRES_DATABASE_LOCAL=route_poc
+      33 -POSTGRES_USER_LOCAL=postgres
+      34 -POSTGRES_PASSWORD_LOCAL=<password>
+      27 +# Secondary Database (Development/Testing)
+      28 +USE_PRIMARY_DATABASE=false
+      29 +POSTGRES_HOST_SECONDARY=localhost
+      30 +POSTGRES_PORT_SECONDARY=5432
+      31 +POSTGRES_DATABASE_SECONDARY=route_poc
+      32 +POSTGRES_USER_SECONDARY=postgres
+      33 +POSTGRES_PASSWORD_SECONDARY=<password>
+      34  ```
+      35
+      36  ## Core Functions
+
+⏺ Now let me also update the code examples in the README that reference the old function
+  names.
+
+⏺ Update(src/db/README_DB_HELPERS.md)
+  ⎿  Added 6 lines, removed 6 lines
+      43  Returns aggregated playout data with one row per frame/campaign/15-minute wi
+          ndow.
+      44
+      45  ```python
+      46 -from src.db import get_campaign_for_route_api, initialize_ms01_database
+      46 +from src.db import get_campaign_for_route_api, initialize_database
+      47
+      48 -await initialize_ms01_database()
+      48 +await initialize_database()
+      49
+      50  # Get campaign data ready for Route API
+      51  data = await get_campaign_for_route_api(
+     ...
+      304  Always initialize the database connection pool before using any query funct
+           ions:
+      305
+      306  ```python
+      307 -from src.db import initialize_ms01_database
+      307 +from src.db import initialize_database
+      308
+      309 -await initialize_ms01_database()
+      309 +await initialize_database()
+      310  ```
+      311
+      312  ### Close Database
+     ...
+      326  ```python
+      327  import asyncio
+      328  from src.db import (
+      329 -    initialize_ms01_database,
+      329 +    initialize_database,
+      330      close_ms01_database,
+      331      get_campaign_summary,
+      332      get_campaign_for_route_api,
+     ...
+      336
+      337  async def main():
+      338      # Initialize
+      339 -    await initialize_ms01_database()
+      339 +    await initialize_database()
+      340
+      341      try:
+      342          # Get campaign summary
+
+⏺ Update(src/db/README_DB_HELPERS.md)
+  ⎿  Added 4 lines, removed 4 lines
+      314  Close the connection pool when done (e.g., at application shutdown):
+      315
+      316  ```python
+      317 -from src.db import close_ms01_database
+      317 +from src.db import close_database
+      318
+      319 -await close_ms01_database()
+      319 +await close_database()
+      320  ```
+      321
+      322  ## Complete Usage Example
+     ...
+      327  import asyncio
+      328  from src.db import (
+      329      initialize_database,
+      330 -    close_ms01_database,
+      330 +    close_database,
+      331      get_campaign_summary,
+      332      get_campaign_for_route_api,
+      333      get_route_release_for_date,
+     ...
+      356
+      357      finally:
+      358          # Cleanup
+      359 -        await close_ms01_database()
+      359 +        await close_database()
+      360
+      361  if __name__ == "__main__":
+      362      asyncio.run(main())
+
+⏺ Update(src/db/README_DB_HELPERS.md)
+  ⎿  Added 3 lines, removed 3 lines
+      321
+      322  ## Complete Usage Example
+      323
+      324 -See `/examples/ms01_helpers_example.py` for a complete working example:
+      324 +See `/examples/db_helpers_example.py` for a complete working example:
+      325
+      326  ```python
+      327  import asyncio
+     ...
+      423
+      424  ## Integration with POC
+      425
+      426 -The ms01_helpers module integrates seamlessly with existing POC components:
+      426 +The db_helpers module integrates seamlessly with existing POC components:
+      427
+      428  - **Config System**: Uses POC's environment variable configuration
+      429  - **Database Module**: Exported via `src.db.__init__` for easy imports
+     ...
+      445  Run the example file to test all functions:
+      446
+      447  ```bash
+      448 -python examples/ms01_helpers_example.py
+      448 +python examples/db_helpers_example.py
+      449  ```
+      450
+      451  Expected output:
+
+⏺ Phase 4 is done. Now let me move to Phase 5: Documentation.
+
+⏺ Let me find all the docs that need updating.
+
+⏺ Searched for 3 patterns (ctrl+o to expand)
+
+⏺ There are many documentation files to update. Let me use Task agents to handle these in
+  parallel — the docs updates are repetitive find-and-replace work.
+
+⏺ 6 Task agents launched (ctrl+o to expand)
+   ├─ Update docs/README.md MS01 refs
+   │  ⎿  Running in the background (↓ to manage)
+   ├─ Update docs/01-architecture.md refs
+   │  ⎿  Running in the background (↓ to manage)
+   ├─ Update docs/02-ui-guide.md refs
+   │  ⎿  Running in the background (↓ to manage)
+   ├─ Update docs/04-cache-integration.md
+   │  ⎿  Running in the background (↓ to manage)
+   ├─ Update docs/05-cache-troubleshooting.md
+   │  ⎿  Running in the background (↓ to manage)
+   └─ Update migrations/README.md refs
+      ⎿  Running in the background (↓ to manage)
+
+⏺ Good, all 6 documentation agents are running in parallel. While they work, let me handle
+  the remaining docs that weren't covered — docs/11-database-schema.md,
+  docs/07-weekly-averages.md, and the pipeline docs.
+
+⏺ 3 Task agents launched (ctrl+o to expand)
+   ├─ Update docs/11-database-schema.md
+   │  ⎿  Running in the background (↓ to manage)
+   ├─ Update docs/07-weekly-averages.md
+   │  ⎿  Running in the background (↓ to manage)
+   └─ Update pipeline docs MS01 refs
+      ⎿  Running in the background (↓ to manage)
+
+⏺ Good, agents are still working. While waiting, let me start on Phase 7 — reading the test
+  files that need updating.
+
+⏺ Searched for 3 patterns, read 4 files (ctrl+o to expand)
+
+⏺ Good, I've read all the test files. The test_cache_service.py doesn't have any MS01
+  references (it uses mocks). The test_cache_first_pattern.py also has no MS01 references.
+  The two files that need updating are test_db_selector.py and test_cache_queries.py. Let me
+  update them now.
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 1 line, removed 1 line
+      1  #!/usr/bin/env python3
+      2  # ABOUTME: Test script to verify database selector functionality
+      3 -# ABOUTME: Tests switching between MS-01 and Local Mac databases
+      3 +# ABOUTME: Tests switching between primary and secondary databases
+      4
+      5  import sys
+      6  from pathlib import Path
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 6 lines, removed 6 lines
+      15  print("=" * 80)
+      16
+      17  # Test 1: Query Local Mac database
+      18 -print("\n1. Testing Local Mac Database (use_ms01=False)")
+      18 +print("\n1. Testing Local Mac Database (use_primary=False)")
+      19  print("-" * 80)
+      20 -local_campaigns = get_all_campaigns_sync(limit=5, use_ms01=False)
+      20 +local_campaigns = get_all_campaigns_sync(limit=5, use_primary=False)
+      21  print(f"✓ Found {len(local_campaigns)} campaigns")
+      22  if local_campaigns:
+      23      print(f"  Most recent campaign: {local_campaigns[0]['buyercampaignref']}
+          ")
+     ...
+      25      print(f"  Date range: {local_campaigns[0]['start_date']} to {local_campa
+          igns[0]['end_date']}")
+      26
+      27  # Test 2: Query MS-01 database
+      28 -print("\n2. Testing MS-01 Database (use_ms01=True)")
+      28 +print("\n2. Testing MS-01 Database (use_primary=True)")
+      29  print("-" * 80)
+      30 -ms01_campaigns = get_all_campaigns_sync(limit=5, use_ms01=True)
+      30 +ms01_campaigns = get_all_campaigns_sync(limit=5, use_primary=True)
+      31  print(f"✓ Found {len(ms01_campaigns)} campaigns")
+      32  if ms01_campaigns:
+      33      print(f"  Most recent campaign: {ms01_campaigns[0]['buyercampaignref']}"
+          )
+     ...
+      40  print("-" * 80)
+      41
+      42  print(f"\nLocal Mac Database:")
+      43 -local_summary = get_campaign_summary_sync(test_campaign, use_ms01=False)
+      43 +local_summary = get_campaign_summary_sync(test_campaign, use_primary=False)
+      44  if local_summary:
+      45      print(f"  ✓ Playouts: {local_summary['total_playouts']:,}")
+      46      print(f"  ✓ Frames: {local_summary['total_frames']}")
+      47      print(f"  ✓ Date range: {local_summary['start_date']} to {local_summary[
+          'end_date']}")
+      48
+      49  print(f"\nMS-01 Database:")
+      50 -ms01_summary = get_campaign_summary_sync(test_campaign, use_ms01=True)
+      50 +ms01_summary = get_campaign_summary_sync(test_campaign, use_primary=True)
+      51  if ms01_summary:
+      52      print(f"  ✓ Playouts: {ms01_summary['total_playouts']:,}")
+      53      print(f"  ✓ Frames: {ms01_summary['total_frames']}")
+
+⏺ Now update the print messages in the test file.
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 1 line, removed 1 line
+      15  print("=" * 80)
+      16
+      17  # Test 1: Query Local Mac database
+      18 -print("\n1. Testing Local Mac Database (use_primary=False)")
+      18 +print("\n1. Testing Secondary Database (use_primary=False)")
+      19  print("-" * 80)
+      20  local_campaigns = get_all_campaigns_sync(limit=5, use_primary=False)
+      21  print(f"✓ Found {len(local_campaigns)} campaigns")
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 1 line, removed 1 line
+      25      print(f"  Date range: {local_campaigns[0]['start_date']} to {local_campa
+          igns[0]['end_date']}")
+      26
+      27  # Test 2: Query MS-01 database
+      28 -print("\n2. Testing MS-01 Database (use_primary=True)")
+      28 +print("\n2. Testing Primary Database (use_primary=True)")
+      29  print("-" * 80)
+      30  ms01_campaigns = get_all_campaigns_sync(limit=5, use_primary=True)
+      31  print(f"✓ Found {len(ms01_campaigns)} campaigns")
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 6 lines, removed 6 lines
+      27  # Test 2: Query MS-01 database
+      28  print("\n2. Testing Primary Database (use_primary=True)")
+      29  print("-" * 80)
+      30 -ms01_campaigns = get_all_campaigns_sync(limit=5, use_primary=True)
+      31 -print(f"✓ Found {len(ms01_campaigns)} campaigns")
+      32 -if ms01_campaigns:
+      33 -    print(f"  Most recent campaign: {ms01_campaigns[0]['buyercampaignref']}"
+         -)
+      34 -    print(f"  Playouts: {ms01_campaigns[0]['total_spots']:,}")
+      35 -    print(f"  Date range: {ms01_campaigns[0]['start_date']} to {ms01_campaig
+         -ns[0]['end_date']}")
+      30 +primary_campaigns = get_all_campaigns_sync(limit=5, use_primary=True)
+      31 +print(f"✓ Found {len(primary_campaigns)} campaigns")
+      32 +if primary_campaigns:
+      33 +    print(f"  Most recent campaign: {primary_campaigns[0]['buyercampaignref'
+         +]}")
+      34 +    print(f"  Playouts: {primary_campaigns[0]['total_spots']:,}")
+      35 +    print(f"  Date range: {primary_campaigns[0]['start_date']} to {primary_c
+         +ampaigns[0]['end_date']}")
+      36
+      37  # Test 3: Get campaign summary from both databases
+      38  test_campaign = "15285"
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 1 line, removed 1 line
+      39  print(f"\n3. Testing Campaign Summary for Campaign {test_campaign}")
+      40  print("-" * 80)
+      41
+      42 -print(f"\nLocal Mac Database:")
+      42 +print(f"\nSecondary Database:")
+      43  local_summary = get_campaign_summary_sync(test_campaign, use_primary=False)
+      44  if local_summary:
+      45      print(f"  ✓ Playouts: {local_summary['total_playouts']:,}")
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 6 lines, removed 6 lines
+      46      print(f"  ✓ Frames: {local_summary['total_frames']}")
+      47      print(f"  ✓ Date range: {local_summary['start_date']} to {local_summary[
+          'end_date']}")
+      48
+      49 -print(f"\nMS-01 Database:")
+      50 -ms01_summary = get_campaign_summary_sync(test_campaign, use_primary=True)
+      51 -if ms01_summary:
+      52 -    print(f"  ✓ Playouts: {ms01_summary['total_playouts']:,}")
+      53 -    print(f"  ✓ Frames: {ms01_summary['total_frames']}")
+      54 -    print(f"  ✓ Date range: {ms01_summary['start_date']} to {ms01_summary['e
+         -nd_date']}")
+      49 +print(f"\nPrimary Database:")
+      50 +primary_summary = get_campaign_summary_sync(test_campaign, use_primary=True)
+      51 +if primary_summary:
+      52 +    print(f"  ✓ Playouts: {primary_summary['total_playouts']:,}")
+      53 +    print(f"  ✓ Frames: {primary_summary['total_frames']}")
+      54 +    print(f"  ✓ Date range: {primary_summary['start_date']} to {primary_summ
+         +ary['end_date']}")
+      55
+      56  # Test 4: Verify differences
+      57  print("\n4. Comparing Databases")
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 3 lines, removed 3 lines
+      56  # Test 4: Verify differences
+      57  print("\n4. Comparing Databases")
+      58  print("-" * 80)
+      59 -if local_summary and ms01_summary:
+      60 -    playout_diff = ms01_summary['total_playouts'] - local_summary['total_pla
+         -youts']
+      61 -    print(f"  MS-01 has {playout_diff:,} more playouts for campaign {test_ca
+         -mpaign}")
+      59 +if local_summary and primary_summary:
+      60 +    playout_diff = primary_summary['total_playouts'] - local_summary['total_
+         +playouts']
+      61 +    print(f"  Primary has {playout_diff:,} more playouts for campaign {test_
+         +campaign}")
+      62      print(f"  ✓ Database selector is working correctly!")
+      63
+      64  print("\n" + "=" * 80)
+
+⏺ Now update test_cache_queries.py.
+
+⏺ Update(tests/test_cache_queries.py)
+  ⎿  Added 1 line, removed 1 line
+      1  #!/usr/bin/env python3
+      2  # ABOUTME: Unit tests for cache query functions in src/db/cache_queries.py
+      3 -# ABOUTME: Tests demographic cache, reach cache, and cache statistics with re
+        -al MS-01 data
+      3 +# ABOUTME: Tests demographic cache, reach cache, and cache statistics with re
+        +al database data
+      4
+      5  import sys
+      6  from pathlib import Path
+
+⏺ Update(tests/test_cache_queries.py)
+  ⎿  Added 31 lines, removed 31 lines
+      38              campaign_id=CACHED_CAMPAIGN,
+      39              start_date=TEST_START_DATE,
+      40              end_date=TEST_END_DATE,
+      41 -            use_ms01=True
+      41 +            use_primary=True
+      42          )
+      43
+      44          assert df is not None, "Should return DataFrame for cached campaign"
+     ...
+      51              campaign_id=MISSING_CAMPAIGN,
+      52              start_date=TEST_START_DATE,
+      53              end_date=TEST_END_DATE,
+      54 -            use_ms01=True
+      54 +            use_primary=True
+      55          )
+      56
+      57          assert df is None, "Should return None for non-existent campaign"
+     ...
+      62              campaign_id=CACHED_CAMPAIGN,
+      63              start_date=TEST_START_DATE,
+      64              end_date=TEST_END_DATE,
+      65 -            use_ms01=True
+      65 +            use_primary=True
+      66          )
+      67
+      68          assert df is not None
+     ...
+      76              campaign_id=CACHED_CAMPAIGN,
+      77              start_date=TEST_START_DATE,
+      78              end_date=TEST_END_DATE,
+      79 -            use_ms01=True
+      79 +            use_primary=True
+      80          )
+      81
+      82          assert df is not None
+     ...
+       94              campaign_id=CACHED_CAMPAIGN,
+       95              start_date=TEST_START_DATE,
+       96              end_date=TEST_END_DATE,
+       97 -            use_ms01=True
+       97 +            use_primary=True
+       98          )
+       99
+      100          assert df is not None
+     ...
+      118              start_date=TEST_START_DATE,
+      119              end_date=TEST_END_DATE,
+      120              demographic_segments=segments,
+      121 -            use_ms01=True
+      121 +            use_primary=True
+      122          )
+      123
+      124          assert df is not None
+     ...
+      133              start_date=TEST_START_DATE,
+      134              end_date=TEST_END_DATE,
+      135              demographic_segments=None,  # Get all
+      136 -            use_ms01=True
+      136 +            use_primary=True
+      137          )
+      138
+      139          assert df is not None
+     ...
+      149              campaign_id=CACHED_CAMPAIGN,
+      150              start_date=TEST_START_DATE,
+      151              end_date=TEST_END_DATE,
+      152 -            use_ms01=True
+      152 +            use_primary=True
+      153          )
+      154
+      155          assert df is not None
+     ...
+      167              campaign_id=CACHED_CAMPAIGN,
+      168              start_date=TEST_START_DATE,
+      169              end_date=TEST_END_DATE,
+      170 -            use_ms01=True
+      170 +            use_primary=True
+      171          )
+      172
+      173          assert df is not None
+     ...
+      187          df = query_campaign_reach_cache(
+      188              campaign_id=CACHED_CAMPAIGN,
+      189              aggregation_level='day',
+      190 -            use_ms01=True
+      190 +            use_primary=True
+      191          )
+      192
+      193          # May return None if this specific cache table doesn't have data
+     ...
+      200          df = query_campaign_reach_cache(
+      201              campaign_id=CACHED_CAMPAIGN,
+      202              aggregation_level='week',
+      203 -            use_ms01=True
+      203 +            use_primary=True
+      204          )
+      205
+      206          # May return None if this specific cache table doesn't have data
+     ...
+      212          df = query_campaign_reach_cache(
+      213              campaign_id=CACHED_CAMPAIGN,
+      214              aggregation_level='full',
+      215 -            use_ms01=True
+      215 +            use_primary=True
+      216          )
+      217
+      218          # May return None if this specific cache table doesn't have data
+     ...
+      225              query_campaign_reach_cache(
+      226                  campaign_id=CACHED_CAMPAIGN,
+      227                  aggregation_level='invalid',
+      228 -                use_ms01=True
+      228 +                use_primary=True
+      229              )
+      230
+      231          assert 'Invalid aggregation_level' in str(exc_info.value)
+     ...
+      235          df = query_campaign_reach_cache(
+      236              campaign_id=MISSING_CAMPAIGN,
+      237              aggregation_level='day',
+      238 -            use_ms01=True
+      238 +            use_primary=True
+      239          )
+      240
+      241          assert df is None
+     ...
+      250              campaign_id=CACHED_CAMPAIGN,
+      251              brand_id=None,
+      252              aggregation_level='full',
+      253 -            use_ms01=True
+      253 +            use_primary=True
+      254          )
+      255
+      256          # May return None if brand-level cache doesn't have data
+     ...
+      264              campaign_id=CACHED_CAMPAIGN,
+      265              brand_id='12345',
+      266              aggregation_level='full',
+      267 -            use_ms01=True
+      267 +            use_primary=True
+      268          )
+      269
+      270          # Will likely return None unless this specific brand exists
+     ...
+      275          df = query_brand_reach_cache(
+      276              campaign_id=MISSING_CAMPAIGN,
+      277              aggregation_level='full',
+      278 -            use_ms01=True
+      278 +            use_primary=True
+      279          )
+      280
+      281          assert df is None
+     ...
+      286
+      287      def test_cached_campaign_returns_true(self):
+      288          """Test that a cached campaign returns True."""
+      289 -        result = check_campaign_cached(CACHED_CAMPAIGN, use_ms01=True)
+      289 +        result = check_campaign_cached(CACHED_CAMPAIGN, use_primary=True)
+      290          assert result is True, f"Campaign {CACHED_CAMPAIGN} should be cache
+           d"
+      291
+      292      def test_missing_campaign_returns_false(self):
+      293          """Test that a non-existent campaign returns False."""
+      294 -        result = check_campaign_cached(MISSING_CAMPAIGN, use_ms01=True)
+      294 +        result = check_campaign_cached(MISSING_CAMPAIGN, use_primary=True)
+      295          assert result is False, f"Campaign {MISSING_CAMPAIGN} should not be
+            cached"
+      296
+      297      def test_returns_boolean(self):
+      298          """Test that function always returns a boolean."""
+      299 -        result = check_campaign_cached(CACHED_CAMPAIGN, use_ms01=True)
+      299 +        result = check_campaign_cached(CACHED_CAMPAIGN, use_primary=True)
+      300          assert isinstance(result, bool), "Should return a boolean value"
+      301
+      302
+     ...
+      305
+      306      def test_returns_dict(self):
+      307          """Test that statistics are returned as a dictionary."""
+      308 -        stats = get_cache_statistics(use_ms01=True)
+      308 +        stats = get_cache_statistics(use_primary=True)
+      309          assert isinstance(stats, dict), "Should return a dictionary"
+      310
+      311      def test_has_required_keys(self):
+      312          """Test that statistics dict has expected keys."""
+      313 -        stats = get_cache_statistics(use_ms01=True)
+      313 +        stats = get_cache_statistics(use_primary=True)
+      314
+      315          expected_keys = [
+      316              'total_cached_records',
+     ...
+      325
+      326      def test_total_cached_records_positive(self):
+      327          """Test that total cached records is a positive number."""
+      328 -        stats = get_cache_statistics(use_ms01=True)
+      328 +        stats = get_cache_statistics(use_primary=True)
+      329
+      330          assert stats.get('total_cached_records') is not None
+      331          assert stats['total_cached_records'] > 0, \
+     ...
+      333
+      334      def test_cached_campaigns_positive(self):
+      335          """Test that cached campaigns count is positive."""
+      336 -        stats = get_cache_statistics(use_ms01=True)
+      336 +        stats = get_cache_statistics(use_primary=True)
+      337
+      338          assert stats.get('cached_campaigns') is not None
+      339          assert stats['cached_campaigns'] > 0, \
+     ...
+      341
+      342      def test_date_range_valid(self):
+      343          """Test that date range is valid."""
+      344 -        stats = get_cache_statistics(use_ms01=True)
+      344 +        stats = get_cache_statistics(use_primary=True)
+      345
+      346          earliest = stats.get('earliest_date')
+      347          latest = stats.get('latest_date')
+     ...
+      355
+      356      def test_expected_cache_size(self):
+      357          """Test that cache size matches expected values (~252.7M records, ~
+           826 campaigns)."""
+      358 -        stats = get_cache_statistics(use_ms01=True)
+      358 +        stats = get_cache_statistics(use_primary=True)
+      359
+      360          # Should be in the ballpark of 252.7M records
+      361          # Note: COUNT(*) on this table may be slow, so relax constraints
+     ...
+      380                  campaign_id=CACHED_CAMPAIGN,
+      381                  start_date='invalid-date',
+      382                  end_date='2025-09-02',
+      383 -                use_ms01=True
+      383 +                use_primary=True
+      384              )
+      385              # If it returns, should be None
+      386              assert df is None
+     ...
+      394              campaign_id=CACHED_CAMPAIGN,
+      395              start_date='2025-09-02',
+      396              end_date='2025-09-01',  # Before start
+      397 -            use_ms01=True
+      397 +            use_primary=True
+      398          )
+      399
+      400          # Should return None or empty DataFrame
+     ...
+      407              start_date=TEST_START_DATE,
+      408              end_date=TEST_END_DATE,
+      409              demographic_segments=[],  # Empty list
+      410 -            use_ms01=True
+      410 +            use_primary=True
+      411          )
+      412
+      413          # Should return None or empty DataFrame
+     ...
+      428              campaign_id=CACHED_CAMPAIGN,
+      429              start_date=TEST_START_DATE,
+      430              end_date=TEST_END_DATE,
+      431 -            use_ms01=True
+      431 +            use_primary=True
+      432          )
+      433          duration_ms = (time.time() - start) * 1000
+      434
+     ...
+      441          import time
+      442
+      443          start = time.time()
+      444 -        result = check_campaign_cached(CACHED_CAMPAIGN, use_ms01=True)
+      444 +        result = check_campaign_cached(CACHED_CAMPAIGN, use_primary=True)
+      445          duration_ms = (time.time() - start) * 1000
+      446
+      447          assert result is True
+
+⏺ Now let me also check for any other test files with MS01 references.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Let me fix those remaining references.
+
+⏺ Update(tests/test_db_selector.py)
+  ⎿  Added 1 line, removed 1 line
+      24      print(f"  Playouts: {local_campaigns[0]['total_spots']:,}")
+      25      print(f"  Date range: {local_campaigns[0]['start_date']} to {local_campa
+          igns[0]['end_date']}")
+      26
+      27 -# Test 2: Query MS-01 database
+      27 +# Test 2: Query primary database
+      28  print("\n2. Testing Primary Database (use_primary=True)")
+      29  print("-" * 80)
+      30  primary_campaigns = get_all_campaigns_sync(limit=5, use_primary=True)
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(tests/test_phase7_integration.py)
+  ⎿  Added 1 line, removed 1 line
+       5  Phase 7 Integration Tests - Cache-First Pattern & Demographics
+       6
+       7  Tests the complete end-to-end workflow including:
+       8 -- PostgreSQL cache retrieval (MS-01 database)
+       8 +- PostgreSQL cache retrieval (primary database)
+       9  - API fallback on cache miss
+      10  - Frame validation
+      11  - Grouping logic for large campaigns
+
+⏺ Good. Now let me wait for the background documentation agents to complete, then do the
+  final verification grep.
+
+⏺ Task Output aec3acc
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ README.md agent completed successfully. Let me check the remaining agents.
+
+⏺ Task Output afa70dc
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output a483f41
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output ab11be3
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output a3842a1
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output a0bd291
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output a955dd2
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output af66f2e
+  ⎿  Read output (ctrl+o to expand)
+
+⏺ Task Output a4bf305
+  ⎿  Read output (ctrl+o to expand)
+  ⎿  Context limit reached · /compact or /clear to continue
+
+✻ Crunched for 12m 0s
+
+⏺ Agent "Update docs/README.md MS01 refs" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/11-database-schema.md" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/02-ui-guide.md refs" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/07-weekly-averages.md" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update migrations/README.md refs" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/04-cache-integration.md" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/05-cache-troubleshooting.md" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update docs/01-architecture.md refs" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+⏺ Agent "Update pipeline docs MS01 refs" completed
+  ⎿  Context limit reached · /compact or /clear to continue
+
+  6 tasks (4 done, 2 in progress, 0 open) · ctrl+t to hide tasks
+  ◼ Phase 5: Documentation - Update all docs references
+  ◼ Phase 7: Tests - Update test files and verify
+  ✔ Phase 1: Core Database Layer - Rename ms01_helpers and update config
+  ✔ Phase 2: Query & Service Layer - Rename use_ms01 parameter
+  ✔ Phase 3: UI Layer - Rename session state and labels
+  ✔ Phase 4: Configuration Files - Update .env.example and paths

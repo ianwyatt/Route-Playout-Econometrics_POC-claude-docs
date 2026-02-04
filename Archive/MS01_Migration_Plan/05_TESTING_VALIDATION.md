@@ -772,7 +772,7 @@ ping -c 3 192.168.1.34
 nc -zv 192.168.1.34 5432
 
 # Test with psql (if installed)
-PGPASSWORD='YOUR_MS01_PASSWORD_HERE' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT 1"
+PGPASSWORD="$POSTGRES_PASSWORD_PRIMARY" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT 1"
 ```
 
 ### Test 12: View Data Quality

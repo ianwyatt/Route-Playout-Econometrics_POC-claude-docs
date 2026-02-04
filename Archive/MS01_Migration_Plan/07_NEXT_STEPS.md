@@ -44,7 +44,7 @@
 2. **Test Database Connection**
    ```bash
    # Test with credentials from .env
-   PGPASSWORD='<password>' psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT version();"
+   PGPASSWORD="$POSTGRES_PASSWORD_PRIMARY" psql -h 192.168.1.34 -U postgres -d route_poc -c "SELECT version();"
    ```
 
    **If successful**:
