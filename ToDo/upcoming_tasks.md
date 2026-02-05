@@ -2,20 +2,26 @@
 
 ## Next Priority: DigitalOcean Deployment
 
-**Status**: Database export ready, deployment pending
+**Status**: Database cleaned up (76 GB), consider re-exporting before deployment
 
 ### Background
 
-Database export prepared (14 January 2026):
+- Database export prepared (14 January 2026): `~/poc export/route_poc_export/` (7.9 GB)
 - MVs converted to regular tables (pg_dump workaround)
-- Export location: `~/poc export/route_poc_export/` (7.9 GB compressed)
 - Excludes `playout_data` (not needed by UI)
+- **5 Feb 2026**: Index cleanup removed 38 GB of unused indexes (114 GB → 76 GB)
+- Re-exporting after cleanup would produce a smaller transfer (~5-6 GB estimated)
+
+### Pre-Deployment Decision
+
+- [ ] **Decide**: Re-export database post-cleanup OR use existing export + run cleanup SQL on DO
 
 ### Tasks
 
 **Database (~$61/month)**
 - [ ] Provision DO Managed PostgreSQL (London, Basic 4 GB, 60 GB storage)
 - [ ] Transfer and restore database
+- [ ] If using old export: run index cleanup SQL from handover
 - [ ] Create read-only app user
 - [ ] Verify data integrity
 
@@ -37,21 +43,22 @@ Database export prepared (14 January 2026):
 
 | File | Purpose |
 |------|---------|
+| `handover/SESSION_2026-02-05_INDEX_CLEANUP.md` | Index cleanup SQL + deployment path |
 | `handover/2026-01-14-digitalocean-database-export.md` | Export details, restore commands |
-| `todo/archive/2026-01-14-digitalocean-deployment.md` | Full task checklist |
+| `docs/Documentation/DATABASE_INDEX_CLEANUP.md` | Full index analysis |
 | `docs/Documentation/SELF_HOSTED_DEPLOYMENT_GUIDE.md` | Pangolin/PocketID guide |
+| `docs/Documentation/GITHUB_PRIVATE_REPO_ACCESS.md` | Fine-grained token auth |
 
-### Start Prompt
+---
 
-```
-Continue deploying Route Playout Econometrics POC to DigitalOcean.
+## Completed: Database Index Cleanup (5 February 2026)
 
-Database export is ready at ~/poc export/route_poc_export/
-
-Next: Provision DO Managed PostgreSQL and restore database.
-
-See: handover/2026-01-14-digitalocean-database-export.md
-```
+- Audited all 101 indexes against every SQL query in `src/db/`
+- Dropped 64 unused indexes across 4 phases
+- Database: 114 GB → 76 GB (38 GB freed, 33% reduction)
+- Kept `idx_impacts_demo_campaign` (2.8 GB) as fallback safety net
+- Documentation: `docs/Documentation/DATABASE_INDEX_CLEANUP.md`
+- Handover: `handover/SESSION_2026-02-05_INDEX_CLEANUP.md`
 
 ---
 
