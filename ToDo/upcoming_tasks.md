@@ -50,6 +50,19 @@
 
 ---
 
+## Completed: Code Quality Review (5 February 2026)
+
+- Agent-based review of all documentation and source code (4 rounds)
+- Fixed 17 documentation inaccuracies across 10 files
+- Updated 15 stale MV references across 9 source files
+- Deleted 7 dead code files (2,411 lines removed)
+- Fixed runtime bug: frame count query referenced dropped table
+- Fixed null safety issue in campaign count query
+- 4 commits: `183766c`, `4b9b7bd`, `cc34147`, `bdf4ed0`
+- Handover: `handover/SESSION_2026-02-05_CODE_QUALITY_REVIEW.md`
+
+---
+
 ## Completed: Database Cleanup (5 February 2026)
 
 - Audited all 101 indexes and 42 tables against every SQL query in `src/db/`

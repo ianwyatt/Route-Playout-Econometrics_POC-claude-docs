@@ -52,7 +52,7 @@ git push origin main      # Gitea ONLY
 
 **This POC is a read-only query interface:**
 - Streamlit UI for campaign analysis
-- Queries PostgreSQL materialised views (no API calls)
+- Queries pre-built PostgreSQL tables (no API calls)
 - Data export (CSV, Excel)
 - For econometricians to browse campaigns and export audience data
 
