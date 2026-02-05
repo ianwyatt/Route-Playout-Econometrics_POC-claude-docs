@@ -8,7 +8,7 @@
 
 ## Summary
 
-Comprehensive code quality review using parallel agent-based review process. Reviewed all documentation, source code comments, dead code, and runtime correctness. Four commits produced.
+Comprehensive code quality review using parallel agent-based review process. Reviewed all documentation, source code comments, dead code, and runtime correctness. Addressed Codex round 6 findings. Fresh database export for Adwanted. Repo made public. Six commits produced.
 
 ---
 
@@ -20,6 +20,8 @@ Comprehensive code quality review using parallel agent-based review process. Rev
 | `4b9b7bd` | refactor | Update stale MV references in source code (9 source files) |
 | `cc34147` | refactor | Remove dead code and fix dropped table query (7 files deleted, 1 bug fix) |
 | `bdf4ed0` | fix | Null safety for campaign count query, update code tree |
+| `6001276` | refactor | Remove unused deps, add logging, fix remaining MV references |
+| `76e0aca` | docs | Update README intro for econometrician audience |
 
 ---
 
@@ -97,12 +99,48 @@ Key principle: Agents propose, the lead (Claude or human) decides. Agents can be
 
 ---
 
+## Phase 5: Codex Round 6 Fixes (commit 6001276)
+
+Triaged 11 findings from Codex code review (round 6, score 7.8/10). Assessed each as must-fix, should-do, nice-to-have, or reject.
+
+**Fixed (4 quick wins):**
+- Removed 6 unused runtime dependencies (fastapi, uvicorn, sqlalchemy, httpx, click, rich) + dead CLI entry point
+- Removed Ruff reference from README (not configured or installed)
+- Added logging to broad `except Exception: pass` in overview.py
+- Fixed 13 remaining "MV" short-form references across 7 files, renamed `_render_mv_*` functions
+
+**Deferred (documented in `code reviews/future_improvements.md`):**
+- Connection pooling — not needed at 1-5 users
+- Test coverage — acceptable for POC
+- mypy strict vs untyped UI defs — aspirational config
+- Time-series query caching — already fast enough
+- In-app authorisation — handled externally by PocketID/Caddy
+
+## Phase 6: README Update (commit 76e0aca)
+
+Updated README intro to better describe the app for econometricians:
+> "Econometricians can browse campaigns or enter a Campaign ID to access playout data linked to Route audiences (reach, frequency and impacts) for econometric modelling."
+
+## Phase 7: Adwanted Handover Package
+
+- Fresh database export: `exports/route_poc_adwanted_20260205.dump` (5.7 GB compressed, 57 GB restored)
+- Verified by restoring to temp database — all 415M+ rows intact
+- Code archive: `exports/pharos_source_20260205.tar.gz` (228 KB)
+- Handover README with restore instructions
+- GitHub repo made public (issues/wiki/discussions disabled, only Route can push)
+- Tag `v2.0-adwanted-handover` moved to commit `76e0aca`
+- Package shared with Adwanted via Dropbox
+
+---
+
 ## Current State
 
-- Codebase is clean: no stale MV references, no dead code, no broken queries
+- Codebase is clean: no stale MV references, no dead code, no broken queries, no unused deps
 - Database: 18 tables + 1 view, 14 indexes, 57 GB
 - All docs accurate against actual source code
-- 4 commits ahead of `v2.0-adwanted-handover` tag
+- Tag `v2.0-adwanted-handover` at commit `76e0aca`
+- Repo public at `https://github.com/RouteResearch/Route-Playout-Econometrics_POC`
+- **Next session: DigitalOcean deployment**
 
 ---
 
