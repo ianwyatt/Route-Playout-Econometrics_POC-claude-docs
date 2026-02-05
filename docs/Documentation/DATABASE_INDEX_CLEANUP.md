@@ -1,8 +1,13 @@
-# Database Index Cleanup — POC App Optimisation
+# Database Cleanup — POC App Optimisation
 
 **Date**: 5 February 2026
 **Database**: Local Mac (`route_poc`)
-**Result**: 114 GB → 76 GB (38 GB freed, 33% reduction)
+**Result**: 114 GB → 57 GB (57 GB freed, 50% reduction)
+
+| Phase | Action | Savings |
+|-------|--------|---------|
+| Index cleanup | Dropped 64 unused indexes | 38 GB (114 → 76 GB) |
+| Table cleanup | Dropped 24 unused tables | 19 GB (76 → 57 GB) |
 
 ---
 
@@ -93,18 +98,100 @@ This serves the fallback queries in `impacts.py:43-44` and `impacts.py:111-112`.
 Primary keys and unique constraints on small pipeline tables (< 400 KB each).
 These preserve data integrity and cost negligible space.
 
+## Phase 5: Unused Table Cleanup (~19.5 GB)
+
+After removing indexes, a second audit identified 24 tables never referenced in
+any app code (`src/`), tests, or runtime configuration. All `mv_*` tables had been
+converted from materialised views to regular tables during the DigitalOcean export
+prep (January 2026), so source-table dependencies (e.g., `mv_playout_15min_brands`
+feeding `mv_campaign_browser`) no longer apply.
+
+References were found only in migration SQL (historical), `refresh_local_mvs.sh`
+(dead — no matviews remain), and export scripts (not runtime).
+
+### Large Tables Dropped (> 1 GB)
+
+| Table | Size | What it was |
+|-------|------|-------------|
+| `mv_cache_campaign_impacts_frame_1hr` | 9,031 MB | Frame-level hourly impacts — app uses `_1hr` and `_frame` separately |
+| `mv_playout_15min_brands` | 5,425 MB | Playout data with brand IDs — app uses `mv_frame_brand_daily/hourly` |
+| `mv_playout_60min` | 1,797 MB | 60-min playout aggregation — unused |
+| `mv_playout_frame_hour` | 1,104 MB | Frame-hour playout aggregation — unused |
+| `mv_playout_120min` | 1,004 MB | 120-min playout aggregation — unused |
+
+### Medium Tables Dropped
+
+| Table | Size | What it was |
+|-------|------|-------------|
+| `mv_cache_campaign_impacts_frame_day` | 634 MB | Frame-day impacts — unused |
+| `mv_cache_campaign_impacts_15min` | 429 MB | 15-min impacts — unused |
+| `mv_playout_frame_day` | 96 MB | Frame-day playouts — unused |
+| `mv_cache_campaign_impacts_daypart` | 20 MB | Daypart impacts — unused |
+| `cache_campaign_reach_day` | 1.3 MB | Daily reach (app uses `_day_cumulative`) |
+| `mv_cache_campaign_impacts_week` | 1.2 MB | Weekly impacts — unused |
+| `mv_playout_dates` | 40 KB | Date list — unused |
+
+### Small Pipeline-Only Tables Dropped
+
+| Table | What it was |
+|-------|-------------|
+| `playout_data` | Empty (truncated) |
+| `playout_imports` | Pipeline import tracking |
+| `playout_dates` | Pipeline date tracking |
+| `spot_break_combinations` | Pipeline spot break lookup |
+| `campaign_cache_limitations` | Pipeline — data pre-joined into mv_campaign_browser |
+| `cache_statistics` | Pipeline cache tracking |
+| `cache_demographic_universes` | Pipeline reference |
+| `cache_space_brands` | Pipeline SPACE API cache |
+| `cache_space_buyers` | Pipeline SPACE API cache |
+| `cache_space_agencies` | Pipeline SPACE API cache |
+| `cache_space_media_owners` | Pipeline SPACE API cache |
+| `route_frame_cache_sync_log` | Pipeline sync log |
+
+### Cascade Drops (automatic)
+
+Dropping `spot_break_combinations` removed FK `cache_route_impacts_15min_by_demo_spot_break_id_fkey`.
+Dropping `campaign_cache_limitations` removed views `v_uncacheable_campaigns` and `v_limitation_health`.
+Dropping `cache_space_*` removed view `cache_space_statistics`.
+None of these were used by the app.
+
+## Final Database State
+
+18 tables + 1 view remaining (all used by the app):
+
+| Table | Size | Purpose |
+|-------|------|---------|
+| `cache_route_impacts_15min_by_demo` | 44 GB | Fallback for impacts queries |
+| `mv_playout_15min` | 8,642 MB | Campaign summary + frame audience table |
+| `mv_frame_audience_hourly` | 2,635 MB | Frame audience hourly tab |
+| `mv_frame_brand_hourly` | 1,523 MB | Brand JOIN for hourly tab |
+| `route_frame_details` | 415 MB | Region/environment/town JOINs |
+| `mv_frame_audience_daily` | 186 MB | Frame audience daily tab |
+| `route_frames` | 164 MB | Lat/lng, frameid JOINs |
+| `mv_frame_brand_daily` | 105 MB | Brand JOIN for daily tab |
+| `mv_cache_campaign_impacts_1hr` | 98 MB | Hourly heatmap |
+| `mv_cache_campaign_impacts_frame` | 81 MB | Geographic + environment + regional |
+| `mv_cache_campaign_impacts_day` | 5.5 MB | Daily time series |
+| `cache_campaign_reach_day_cumulative` | 1.9 MB | Daily cumulative reach |
+| `cache_campaign_reach_week` | 760 KB | Weekly reach |
+| `mv_campaign_browser` | 456 KB | Campaign browser listing |
+| `cache_campaign_reach_full` | 240 KB | Full campaign reach |
+| `mv_campaign_browser_summary` | 96 KB | Browser summary stats |
+| `route_releases` | 88 KB | Release date lookups |
+| `mv_platform_stats` | 40 KB | Platform stats display |
+| `v_demographic_segment_count` | (view) | Demographic segment count |
+
 ## Impact on DigitalOcean Deployment
 
 The database export for DigitalOcean (`~/poc export/route_poc_export/`) was created
 **before** this cleanup. A fresh export after this cleanup would be significantly smaller.
 
-If re-exporting:
-- Previous export: 7.9 GB compressed
-- Expected after cleanup: ~5-6 GB compressed (estimate)
+- Previous export: 7.9 GB compressed (pre-cleanup)
+- Expected after full cleanup: ~3-4 GB compressed (estimate)
 
 ## Reproducing This Cleanup
 
-If the indexes need to be dropped on a fresh database restore, run the SQL from
+If the cleanup needs to be run on a fresh database restore, use the SQL from
 the handover document: `Claude/handover/SESSION_2026-02-05_INDEX_CLEANUP.md`
 
 ---

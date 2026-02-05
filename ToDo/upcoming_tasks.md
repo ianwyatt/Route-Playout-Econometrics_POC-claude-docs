@@ -2,15 +2,14 @@
 
 ## Next Priority: DigitalOcean Deployment
 
-**Status**: Database cleaned up (76 GB), consider re-exporting before deployment
+**Status**: Database fully cleaned (57 GB), re-export recommended before deployment
 
 ### Background
 
-- Database export prepared (14 January 2026): `~/poc export/route_poc_export/` (7.9 GB)
+- Database export prepared (14 January 2026): `~/poc export/route_poc_export/` (7.9 GB, pre-cleanup)
 - MVs converted to regular tables (pg_dump workaround)
-- Excludes `playout_data` (not needed by UI)
-- **5 Feb 2026**: Index cleanup removed 38 GB of unused indexes (114 GB → 76 GB)
-- Re-exporting after cleanup would produce a smaller transfer (~5-6 GB estimated)
+- **5 Feb 2026**: Full cleanup — dropped 64 indexes + 24 tables (114 GB → 57 GB, 50% reduction)
+- Re-exporting after cleanup would produce a much smaller transfer (~3-4 GB estimated)
 
 ### Pre-Deployment Decision
 
@@ -51,11 +50,12 @@
 
 ---
 
-## Completed: Database Index Cleanup (5 February 2026)
+## Completed: Database Cleanup (5 February 2026)
 
-- Audited all 101 indexes against every SQL query in `src/db/`
-- Dropped 64 unused indexes across 4 phases
-- Database: 114 GB → 76 GB (38 GB freed, 33% reduction)
+- Audited all 101 indexes and 42 tables against every SQL query in `src/db/`
+- Dropped 64 unused indexes (38 GB) + 24 unused tables (19 GB)
+- Database: 114 GB → 57 GB (57 GB freed, 50% reduction)
+- 18 tables + 1 view + 14 indexes remaining — all used by app
 - Kept `idx_impacts_demo_campaign` (2.8 GB) as fallback safety net
 - Documentation: `docs/Documentation/DATABASE_INDEX_CLEANUP.md`
 - Handover: `handover/SESSION_2026-02-05_INDEX_CLEANUP.md`

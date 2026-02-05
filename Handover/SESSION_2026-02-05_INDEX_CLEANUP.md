@@ -1,26 +1,26 @@
-# Session Handover: Database Index Cleanup + DigitalOcean Deployment Path
+# Session Handover: Database Cleanup + DigitalOcean Deployment Path
 
 **Date**: 5 February 2026
-**Session Focus**: Remove unused database indexes to reduce DB size before DigitalOcean deployment
+**Session Focus**: Remove unused indexes and tables to reduce DB size before DigitalOcean deployment
 
 ---
 
 ## Summary
 
-Audited all 101 database indexes against every SQL query in the POC Streamlit app.
-Dropped 64 unused indexes, freeing 38 GB (33% of the database). The local database
-went from 114 GB to 76 GB. This directly benefits the upcoming DigitalOcean deployment
-by reducing transfer and storage costs.
+Audited all 101 database indexes and 42 tables against every SQL query in the POC
+Streamlit app. Dropped 64 unused indexes (38 GB) and 24 unused tables (19 GB).
+The local database went from 114 GB to 57 GB — a 50% reduction. This directly
+benefits the upcoming DigitalOcean deployment by reducing transfer and storage costs.
 
 ---
 
 ## Work Completed This Session
 
-### Database Index Cleanup
+### Database Cleanup
 
-**Before**: 114 GB database, ~41 GB in indexes (101 indexes)
-**After**: 76 GB database, ~3.5 GB in indexes (37 indexes)
-**Freed**: 38 GB
+**Before**: 114 GB database, 101 indexes, 42 tables
+**After**: 57 GB database, 14 indexes, 18 tables + 1 view
+**Freed**: 57 GB (50%)
 
 #### Methodology
 
@@ -126,7 +126,52 @@ DROP INDEX IF EXISTS idx_sync_log_status;
 VACUUM ANALYZE;
 ```
 
-### Documentation Created
+#### Phase 5: Unused Table Cleanup (~19.5 GB)
+
+After index cleanup, a second audit identified 24 tables never referenced in app code.
+All `mv_*` tables were converted from materialised views to regular tables during the
+January 2026 export prep, so source-table dependencies no longer apply.
+
+```sql
+-- Large unused tables (> 1 GB)
+DROP TABLE IF EXISTS mv_cache_campaign_impacts_frame_1hr CASCADE;  -- 9,031 MB
+DROP TABLE IF EXISTS mv_playout_15min_brands CASCADE;              -- 5,425 MB
+DROP TABLE IF EXISTS mv_playout_60min CASCADE;                     -- 1,797 MB
+DROP TABLE IF EXISTS mv_playout_frame_hour CASCADE;                -- 1,104 MB
+DROP TABLE IF EXISTS mv_playout_120min CASCADE;                    -- 1,004 MB
+
+-- Medium unused tables
+DROP TABLE IF EXISTS mv_cache_campaign_impacts_frame_day CASCADE;  -- 634 MB
+DROP TABLE IF EXISTS mv_cache_campaign_impacts_15min CASCADE;      -- 429 MB
+DROP TABLE IF EXISTS mv_playout_frame_day CASCADE;                 -- 96 MB
+DROP TABLE IF EXISTS mv_cache_campaign_impacts_daypart CASCADE;    -- 20 MB
+DROP TABLE IF EXISTS mv_cache_campaign_impacts_week CASCADE;       -- 1.2 MB
+DROP TABLE IF EXISTS cache_campaign_reach_day CASCADE;             -- 1.3 MB
+DROP TABLE IF EXISTS mv_playout_dates CASCADE;                     -- 40 KB
+
+-- Small pipeline-only tables
+DROP TABLE IF EXISTS playout_data CASCADE;
+DROP TABLE IF EXISTS playout_imports CASCADE;
+DROP TABLE IF EXISTS playout_dates CASCADE;
+DROP TABLE IF EXISTS spot_break_combinations CASCADE;
+DROP TABLE IF EXISTS campaign_cache_limitations CASCADE;
+DROP TABLE IF EXISTS cache_statistics CASCADE;
+DROP TABLE IF EXISTS cache_demographic_universes CASCADE;
+DROP TABLE IF EXISTS cache_space_brands CASCADE;
+DROP TABLE IF EXISTS cache_space_buyers CASCADE;
+DROP TABLE IF EXISTS cache_space_agencies CASCADE;
+DROP TABLE IF EXISTS cache_space_media_owners CASCADE;
+DROP TABLE IF EXISTS route_frame_cache_sync_log CASCADE;
+
+VACUUM ANALYZE;
+```
+
+**Cascade drops** (automatic, all pipeline-only):
+- FK `cache_route_impacts_15min_by_demo_spot_break_id_fkey` (from `spot_break_combinations`)
+- Views `v_uncacheable_campaigns`, `v_limitation_health` (from `campaign_cache_limitations`)
+- View `cache_space_statistics` (from `cache_space_*`)
+
+### Documentation
 
 - `Claude/docs/Documentation/DATABASE_INDEX_CLEANUP.md` — Full analysis with methodology, what was dropped/kept, and rationale
 
@@ -135,12 +180,13 @@ VACUUM ANALYZE;
 ## Database State
 
 **Local Mac (Secondary):**
-- Size: 76 GB (was 114 GB)
-- 37 indexes remaining (~3.5 GB)
+- Size: 57 GB (was 114 GB)
+- 18 tables + 1 view remaining (all used by app)
+- 14 indexes remaining (~3.5 GB)
 - VACUUM ANALYZE completed
 - All app functionality preserved
 
-**MS-01 (Primary):** Unchanged — indexes not yet cleaned
+**MS-01 (Primary):** Unchanged — indexes and tables not yet cleaned
 
 **Previous backup**: `~/Desktop/route_poc_adwanted_20260204.dump` (7.9 GB, pre-cleanup)
 
@@ -153,14 +199,14 @@ VACUUM ANALYZE;
 The Adwanted developer handover is complete (tag `v2.0-adwanted-handover` at `eb5a7c8`).
 The next priority is deploying to DigitalOcean for external access.
 
-### Impact of Index Cleanup on Deployment
+### Impact of Cleanup on Deployment
 
 The existing database export at `~/poc export/route_poc_export/` (7.9 GB) was created
-**before** the index cleanup. Options:
+**before** this cleanup. Options:
 
-1. **Re-export after cleanup** (recommended) — will be smaller (~5-6 GB estimated),
-   faster to transfer, and won't waste storage recreating dropped indexes on DO
-2. **Use existing export** — restore then run the DROP INDEX SQL above. Wastes
+1. **Re-export after cleanup** (recommended) — will be much smaller (~3-4 GB estimated),
+   faster to transfer, won't waste storage on dropped indexes/tables on DO
+2. **Use existing export** — restore then run the full cleanup SQL above. Wastes
    temporary disk space during restore but achieves the same end state.
 
 ### DigitalOcean Deployment Task List
@@ -216,22 +262,21 @@ Ubuntu 24.04 fresh install verified:
 Continue deploying Route Playout Econometrics POC to DigitalOcean.
 
 Previous work:
-- Database export at ~/poc export/route_poc_export/ (7.9 GB, pre-index cleanup)
-- Index cleanup done on local: 114 GB → 76 GB (38 GB freed)
-- May want to re-export post-cleanup for smaller transfer
+- Database fully cleaned: 114 GB → 57 GB (dropped 64 indexes + 24 tables)
+- Old export at ~/poc export/route_poc_export/ (7.9 GB, pre-cleanup)
+- Re-export recommended for smaller transfer (~3-4 GB estimated)
 - MVs converted to tables for pg_dump compatibility
-- Export excludes playout_data (not needed by UI)
 - VM installation tested successfully on Ubuntu 24.04
 
 Next steps:
-1. Decide: re-export or use existing export + cleanup SQL
+1. Re-export database post-cleanup
 2. Provision DO Managed PostgreSQL (London, Basic 4 GB)
 3. Restore database
 4. Provision Droplet for Streamlit app
 5. Deploy with PocketID auth and GB geo-blocking
 
 See handover: Claude/handover/SESSION_2026-02-05_INDEX_CLEANUP.md
-Index cleanup SQL: in the handover above
+Full cleanup SQL: in the handover above
 ```
 
 ---
@@ -247,8 +292,8 @@ Not blocking; investigate separately.
 
 ### Primary DB (MS-01)
 
-Indexes have NOT been cleaned on the primary database. If needed, run the same
-SQL from the "SQL to Reproduce" section above.
+Indexes and tables have NOT been cleaned on the primary database. If needed, run
+the full cleanup SQL from the "SQL to Reproduce" and "Phase 5" sections above.
 
 ---
 
