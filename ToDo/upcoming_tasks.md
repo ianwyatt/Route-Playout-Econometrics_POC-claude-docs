@@ -1,84 +1,98 @@
 # Upcoming Tasks
 
-## Completed: Codex Code Review Fixes (6 Rounds)
+## Next Priority: DigitalOcean Deployment
 
-All 12 actionable findings addressed across 6 rounds. Score progression: 6.4 → 7.8/10. Two commits pushed:
-1. `fix: thread use_primary consistently across entire UI, add export logging, consolidate brand formatting`
-2. `refactor: remove unused imports, dead code, and redundant comments`
+**Status**: Database export ready, deployment pending
+
+### Background
+
+Database export prepared (14 January 2026):
+- MVs converted to regular tables (pg_dump workaround)
+- Export location: `~/poc export/route_poc_export/` (7.9 GB compressed)
+- Excludes `playout_data` (not needed by UI)
+
+### Tasks
+
+**Database (~$61/month)**
+- [ ] Provision DO Managed PostgreSQL (London, Basic 4 GB, 60 GB storage)
+- [ ] Transfer and restore database
+- [ ] Create read-only app user
+- [ ] Verify data integrity
+
+**App Droplet (~$6/month)**
+- [ ] Provision Droplet (London, Basic 1 GB)
+- [ ] SSH hardening (key-only, non-standard port, Fail2ban)
+- [ ] Install Python 3.11+, UV, git
+- [ ] Clone repo and install dependencies
+- [ ] Configure .env for cloud database
+
+**Security**
+- [ ] Install Caddy reverse proxy
+- [ ] HTTPS with Let's Encrypt
+- [ ] PocketID authentication (passkey-only)
+- [ ] GB geo-blocking
+- [ ] Security headers, rate limiting
+
+### Reference Files
+
+| File | Purpose |
+|------|---------|
+| `handover/2026-01-14-digitalocean-database-export.md` | Export details, restore commands |
+| `todo/archive/2026-01-14-digitalocean-deployment.md` | Full task checklist |
+| `docs/Documentation/SELF_HOSTED_DEPLOYMENT_GUIDE.md` | Pangolin/PocketID guide |
+
+### Start Prompt
+
+```
+Continue deploying Route Playout Econometrics POC to DigitalOcean.
+
+Database export is ready at ~/poc export/route_poc_export/
+
+Next: Provision DO Managed PostgreSQL and restore database.
+
+See: handover/2026-01-14-digitalocean-database-export.md
+```
 
 ---
 
-## Completed: Documentation Archival
+## Completed: Adwanted Handover (5 February 2026)
 
-- 50+ pre-2026 handover files archived to `handover/archive/`
-- 11 completed todo files archived to `todo/archive/`
-- 12 outdated docs archived to `docs/Documentation/Archive/`
-- Adwanted sharing guide created at `docs/SHARING_GUIDE_ADWANTED.md`
+- All dead code removed from codebase and documentation
+- VM installation tested successfully (Ubuntu 24.04)
+- GitHub fine-grained token auth documented
+- Tag `v2.0-adwanted-handover` at commit `eb5a7c8`
+- Database backup: `~/Desktop/route_poc_adwanted_20260204.dump` (7.9 GB)
 
 ---
 
-## Pending: Manual Verification
+## Completed: Codex Code Review Fixes (4 February 2026)
 
-1. `startstream local` → select campaign → verify all tabs show local DB data
-2. Export from any campaign → check logs for warnings (should be clean on happy path)
+All 12 actionable findings addressed across 6 rounds. Score: 6.4 → 7.8/10.
 
 ---
 
 ## Pre-Existing Test Failures (Local DB)
 
-Two test failures exist when running against local database — not introduced by recent changes:
+Two test failures when running against local database:
 
-1. `test_empty_demographic_segments_list` — returns all data instead of empty (test expectation issue)
-2. `test_query_performance_under_100ms` — 214ms on local DB (performance threshold too tight for local)
+1. `test_empty_demographic_segments_list` — returns all data instead of empty
+2. `test_query_performance_under_100ms` — 214ms on local DB
 
-These should be investigated and fixed separately.
-
----
-
-## Future: Cumulative Build Enhancement (Pending)
-
-**Branch**: To be created: `feature/cumulative-build-daily`
-
-**Objective**: Replace weekly cumulative build charts with daily data for smoother, more realistic curves.
-
-**Current State**:
-- Weekly Reach tab and Exec Summary both show cumulative build charts
-- Charts currently use weekly data points, creating straight-line segments between weeks
-- Results in a stepped/angular appearance
-
-**Desired State**:
-- Use daily cumulative data from `cache_campaign_reach_day_cumulative` table
-- Smoother curves that better represent the actual reach build over time
-
-**Files Likely Affected**:
-- `src/ui/tabs/executive_summary.py` - Reach & Impact Build chart
-- `src/ui/tabs/weekly_reach.py` - Cumulative build chart
-- `src/db/streamlit_queries.py` - May need new query for daily cumulative data
-
-**Database Table**: `cache_campaign_reach_day_cumulative`
+Not blocking; investigate separately.
 
 ---
 
-## Future: Share with Adwanted
+## Future Enhancements
 
-See `docs/SHARING_GUIDE_ADWANTED.md` for full instructions on:
-- Adding Adwanted as GitHub collaborator
-- Database export/restore options
-- Environment setup and running the app
-
----
-
-## Future Enhancements (from README)
-
-- Cost and financial tracking (rate cards, CPM, cost per GRP)
+- Cumulative build with daily data (smoother charts)
+- Cost and financial tracking
 - Natural language query interface
-- AI-powered insights (OpenAI/Claude integration)
-- Classic frame support (static/scroller)
+- AI-powered insights
+- Classic frame support
 - Multi-user support with role-based access
 - Demographic filtering for Weekly Reach/GRP tab
-- User authentication (Pocket ID - passkey-only OIDC)
-- User areas with saved campaigns and history
+- User areas with saved campaigns
 
 ---
 
-*Last Updated: 4 February 2026*
+*Last Updated: 5 February 2026*
