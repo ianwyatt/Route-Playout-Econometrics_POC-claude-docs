@@ -2,13 +2,14 @@
 
 ## Next Priority: DigitalOcean Deployment
 
-**Status**: Ready to deploy. Fresh database export done, repo public, Adwanted handover package shared.
+**Status**: Ready to deploy. Fresh database export done, repo public, VM tested with reduced database.
 
 ### Background
 
 - **5 Feb 2026**: Database cleanup — 114 GB → 57 GB (dropped 64 indexes + 24 tables)
 - **5 Feb 2026**: Fresh export: `exports/route_poc_adwanted_20260205.dump` (5.7 GB compressed, 57 GB restored)
 - **5 Feb 2026**: Repo made public: `https://github.com/RouteResearch/Route-Playout-Econometrics_POC`
+- **6 Feb 2026**: VM database swapped to reduced export — 114 GB → 57 GB, app verified working
 - Adwanted handover package shared via Dropbox (database + source + README)
 
 ### Tasks
@@ -42,6 +43,7 @@
 | `exports/route_poc_adwanted_20260205.dump` | Fresh database export (5.7 GB) |
 | `handover/SESSION_2026-02-05_CODE_QUALITY_REVIEW.md` | Code quality review session |
 | `handover/SESSION_2026-02-05_INDEX_CLEANUP.md` | Index cleanup SQL + deployment path |
+| `Handover/SESSION_2026-02-06_VM_DATABASE_SWAP.md` | VM database swap session |
 | `docs/Documentation/SELF_HOSTED_DEPLOYMENT_GUIDE.md` | Pangolin/PocketID guide |
 
 ---
@@ -68,6 +70,18 @@
 - Kept `idx_impacts_demo_campaign` (2.8 GB) as fallback safety net
 - Documentation: `docs/Documentation/DATABASE_INDEX_CLEANUP.md`
 - Handover: `handover/SESSION_2026-02-05_INDEX_CLEANUP.md`
+
+---
+
+## Completed: VM Database Swap (6 February 2026)
+
+- Dropped 114 GB database on Ubuntu 24.04 Parallels VM
+- Restored from reduced export (5.7 GB → 57 GB)
+- VM disk: 138 GB → 81 GB used (159 GB free)
+- Pulled latest code (6 commits), synced deps
+- Installed openssh-server on VM
+- App verified working on `http://10.211.55.5:8504`
+- Handover: `Handover/SESSION_2026-02-06_VM_DATABASE_SWAP.md`
 
 ---
 
@@ -113,4 +127,4 @@ Not blocking; investigate separately.
 
 ---
 
-*Last Updated: 5 February 2026*
+*Last Updated: 6 February 2026*
