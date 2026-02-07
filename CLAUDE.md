@@ -68,8 +68,13 @@ git push origin main      # Gitea ONLY
 | `docs/02-ui-guide.md` | UI code patterns |
 | `docs/03-demo-mode.md` | Brand anonymisation |
 | `docs/04-cache-integration.md` | Cache query patterns |
-| `reference/route-api-reference.md` | Route/SPACE API details (pipeline reference) |
-| `reference/playout-file-formats/` | Playout schema docs |
+| `docs/05-cache-troubleshooting.md` | Cache debugging guide |
+| `docs/06-campaign-indicators.md` | Campaign indicator definitions |
+| `docs/07-weekly-averages.md` | Weekly average calculations |
+| `docs/08-geographic-visualization.md` | Map and geographic features |
+| `docs/09-credentials.md` | Credential management |
+| `docs/10-database-schema.md` | Table/index schema reference |
+| `docs/11-database-export.md` | Database export procedures |
 
 ---
 
@@ -118,7 +123,7 @@ startstream() {
 ### UI Structure (`src/ui/`)
 - **`components/`** — Reusable UI elements (charts, tables, maps)
 - **`tabs/`** — Page-level tab implementations
-- **`config/`** — Configuration and constants
+- **`config/`** — Anonymisation and demographic segment definitions
 
 ### Rules
 1. Check `src/ui/components/` for existing functions before creating new ones
@@ -135,4 +140,21 @@ startstream() {
 
 ---
 
-*Last Updated: February 2026*
+## Database
+
+- **18 tables + 1 view**, 19 indexes, 57 GB total
+- Key tables: `cache_route_impacts_15min_by_demo` (44 GB), `mv_playout_15min` (8.6 GB), `mv_campaign_browser` (836 campaigns)
+- All data is pre-built by `route-playout-pipeline` — this app only reads
+- Export: `exports/route_poc_adwanted_20260205.dump` (5.7 GB compressed)
+
+---
+
+## Deployment
+
+- **GitHub**: Public repo at `https://github.com/RouteResearch/Route-Playout-Econometrics_POC`
+- **VM**: Ubuntu 24.04.3 ARM64 on Parallels (IP: 10.211.55.5, user: `parallels`)
+- **Adwanted**: Handover package shared via Dropbox (database + source + README)
+
+---
+
+*Last Updated: 6 February 2026*
