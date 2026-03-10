@@ -63,36 +63,43 @@
 
 ---
 
-## In Progress: Mobile Volume Index — Dual Index + Performance (5-9 March 2026)
+## Next Up: Phase 3 Performance Optimisation + Code Refactoring
 
-**Status**: Real data imported, dual toggles implemented, UI caching done. Cache build finishing. Uncommitted.
+**Status**: Phase 1 caching complete. Phase 3 items ready to implement.
+**Branch**: `feature/mobile-volume-index` (commit `412bb01`)
+**Plan**: `Claude/Plans/2026-03-09-performance-optimisation.md`
 
-### What's Done (9 Mar)
-- Imported 99.87M rows from analyst's v2 MV (`cristina.oa_frames_hourly_index_v2`)
-- Dual index support: `average_index` (mean) + `median_index` (median, more robust to outliers)
-- Two independent UI toggles: "Average-Indexed Impacts" / "Median-Indexed Impacts"
-- All 6 tabs updated for dual index display (average=orange, median=purple)
-- `@st.cache_data` wrappers for all MI queries + geographic + demographics + header queries
-- Optimised cache build written (temp table approach — 6x JOIN → 1x JOIN + 6 aggregations)
-- Performance plan: `Claude/Plans/2026-03-09-performance-optimisation.md`
-- Handover: `Claude/handover/2026-03-09-dual-index-and-performance.md`
+### Phase 3 Items
+- [ ] **3.1 Connection pooling** — replace per-call `psycopg2.connect()` with `SimpleConnectionPool(1, 5)` in `connection.py`
+- [ ] **3.2 Missing indexes** — verify/add on `mv_cache_campaign_impacts_day`, `_1hr`, `cache_campaign_reach_day_cumulative`, `mv_frame_audience_daily/hourly`
+- [ ] **3.3 Fix demographic count** — `COUNT(DISTINCT)` on 416M rows → query `mv_cache_campaign_impacts_frame` instead
+- [ ] **3.4 Refactor frame audience query** — CTE reads 8.6 GB `mv_playout_15min` → use `mv_frame_audience_daily`
 
-### What's Done (5-6 Mar)
-- Mobile index overlay on ALL 6 tabs
-- 7 pre-aggregated cache tables for performance
-- Import scripts (CSV + DB-to-DB) with `--cache-only` and `--no-cache` flags
-- Query layer reads from cache tables (8 functions)
-- All bugs fixed: GROUP BY errors, WAL explosion, /1000 double-division, week matching
-- Branch: `feature/mobile-volume-index`
-
-### Remaining Steps
-- [ ] Wait for `cache_mi_coverage` to finish building
-- [ ] Test the app with both toggles in browser
-- [ ] Test optimised cache build (`--cache-only` with temp table approach)
-- [ ] Commit all changes
-- [ ] Run full test suite: `uv run pytest tests/ -v`
-- [ ] Implement Phase 2-3 performance optimisations (connection pooling, missing indexes)
+### Code Refactoring for Modularity
+- [ ] Decompose `detailed_analysis.py` (1,154 lines) — 4 sub-views could be separate modules
+- [ ] Extract 19 cached loaders from `app.py` (627 lines) to dedicated `loaders.py`
+- [ ] Extract shared MI aggregation logic (repeated across tabs)
+- [ ] Extract chart styling constants (colours, legend positioning)
+- [ ] Reduce `fill_date_gaps_with_boundary_zeros` duplication (5 calls across 3 files)
 - [ ] Review and merge branch to main
+
+### Handover
+- `Claude/handover/SESSION_2026-03-10_MOBILE_INDEX_UI_POLISH_AND_WEEKLY_FIX.md`
+
+---
+
+## Completed: Mobile Volume Index (5-10 March 2026)
+
+**Branch**: `feature/mobile-volume-index` — commits `4b19a6d` through `412bb01`
+
+- Imported 99.87M rows from analyst DB, 7 cache tables built
+- Dual index: mean (orange `#F18F01`) + median (purple `#8E44AD`), independent toggles
+- Sidebar UI with description + checkboxes, collapsed by default
+- All 6 tabs updated; geographic MI removed (pipeline data inconsistency)
+- Raw Mean/Median Index columns on Frame Audiences for sorting
+- Weekly MI uses daily aggregation over exact reach week ranges
+- Phase 1 caching complete: 19 `@st.cache_data` loaders, 0 DB hits after first load
+- Import scripts: CSV (`import_mobile_index.py`) + DB (`import_mobile_index_from_db.py`)
 
 ---
 
