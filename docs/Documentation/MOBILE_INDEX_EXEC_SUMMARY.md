@@ -102,31 +102,31 @@ Essentially a **map of Premier League grounds and major event venues**. Stretfor
 
 Campaigns with the most high-spike frames — predictably the large national ones:
 
-| Campaign | Brand | Spike Frames | Uplift |
-|---|---|---|---|
-| 18531 | (unbranded, Global) | 474 | +0.4% |
-| 18604 | (unbranded, Global) | 448 | +6.8% |
-| 19033 | **McDonald's** | 322 | +7.3% |
-| 17827 | (unbranded, Global) | 228 | +2.9% |
-| 16693 | **Channel Four** | 227 | +10.2% |
-| 17932 | (unbranded, Bauer) | 159 | **+11.8%** |
-| **18720** | **Channel Four** | 204 | **+28.5%** |
-| 18409 | **Waitrose** | 167 | +2.6% |
+| Campaign | Brand | Media Owner | Spike Frames | Uplift |
+|---|---|---|---|---|
+| 18531 | (unbranded) | Global | 474 | +0.4% |
+| 18604 | (unbranded) | Global | 448 | +6.8% |
+| 19033 | **McDonald's** | Bauer Media Outdoor | 322 | +7.3% |
+| 17827 | (unbranded) | Global | 228 | +2.9% |
+| 16693 | **Channel Four** | JCDecaux | 227 | +10.2% |
+| 17932 | (unbranded) | Bauer Media Outdoor | 159 | **+11.8%** |
+| **18720** | **Channel Four** | JCDecaux | 204 | **+28.5%** |
+| 18409 | **Waitrose** | Bauer Media Outdoor | 167 | +2.6% |
 
-Channel Four campaign 18720 — 204 frames with +28.5% uplift. Their frames are disproportionately located near event hotspots.
+Channel Four campaign 18720 — 204 JCDecaux frames with +28.5% uplift. Their frames are disproportionately located near event hotspots.
 
 ## 5. Biggest Losers
 
-| Campaign | Brand | Frames | Change |
-|---|---|---|---|
-| 18970 | Red Bull | 1 | **-35.3%** |
-| 19198 | (unbranded) | 53 | -24.2% |
-| 16014 | Lipton | 1 | -23.5% |
-| 18550 | (unbranded) | 127 | -19.6% |
-| 17427 | McDonald's | 57 | -17.6% |
-| 18782 | (unbranded) | 986 | -11.5% |
+| Campaign | Brand | Media Owner | Frames | Change |
+|---|---|---|---|---|
+| 18970 | Red Bull | Ocean Outdoor | 1 | **-35.3%** |
+| 19198 | (unbranded) | JCDecaux | 53 | -24.2% |
+| 16014 | Lipton | JCDecaux | 1 | -23.5% |
+| 18550 | (unbranded) | JCDecaux | 127 | -19.6% |
+| 17427 | McDonald's | Bauer Media Outdoor | 57 | -17.6% |
+| 18782 | (unbranded) | Bauer Media Outdoor | 986 | -11.5% |
 
-Red Bull's single frame sits in a location with consistently below-average footfall. The large-decrease campaigns tend to have frames in quieter suburban, off-peak locations.
+Red Bull's single Ocean Outdoor frame sits in a location with consistently below-average footfall. The large-decrease campaigns tend to have frames in quieter suburban, off-peak locations.
 
 ---
 
