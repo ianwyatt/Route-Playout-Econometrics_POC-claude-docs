@@ -7,6 +7,20 @@
 
 ---
 
+## Executive Summary
+
+Mobile volume indexing — adjusting OOH audience impacts by real mobile device footfall at each frame — produces a **net +4.93% uplift** in total audience impacts across 833 campaigns (mean index), or +2.41% using the more conservative median index.
+
+**73% of campaigns see positive uplift.** 44% gain 5% or more, while only 7.2% see decreases larger than 5%. The median campaign gains +4.1%. The mechanism is elegant: although the unweighted average index across all 100M frame-hours is exactly 1.0, the audience-weighted average is 1.049 — because high-footfall periods (peak commute, evenings, events) naturally coincide with higher raw audience volumes, amplifying the effect when used as a multiplier.
+
+**Event-driven traffic is clearly visible in the data.** Frames near football stadia and major event venues show index values up to 35x the national average on match days. The geographic hotspot map reads like a list of Premier League grounds — Manchester (Old Trafford/Etihad), Cardiff (Principality Stadium), Holloway (Emirates), Tottenham (Spurs), Stretford, Liverpool, Leeds, Brentford, Twickenham. A single frame near the Stadium of Light in Sunderland hit 35x at 10pm on 21 May 2025, with a clear ingress-event-egress ramp from 3x at 3pm to 35x at 10pm across three adjacent frames.
+
+Saturday and Sunday account for **62% of all extreme spikes** (index >3x), concentrated in the 18:00–23:00 event window. Top spike dates align with Premier League fixtures and bank holidays.
+
+**Frame placement matters enormously.** Channel Four's 204-frame JCDecaux campaign gained +28.5% from mobile indexing — suggesting systematic co-location with event hotspots. Conversely, Red Bull's single Ocean Outdoor frame lost 35% — placed in a consistently below-average footfall location. This has direct implications for media planning and frame valuation: the same campaign budget delivers materially different real-world audiences depending on frame proximity to high-footfall locations.
+
+---
+
 ## 1. Overall Impact on Audience
 
 | Metric | Raw Impacts (000s) | Indexed (000s) | Change |
