@@ -26,9 +26,11 @@ The code repo has symlinks (`.claude/` and `Claude/`) pointing to the docs repo.
 
 ```bash
 startstream              # Primary database (MS-01)
-startstream demo         # Primary + brand anonymisation
+startstream demo         # Primary + brand anonymisation (all brands)
+startstream global       # Primary + selective anonymisation (Global campaigns show real brands)
 startstream local        # Secondary database (localhost)
-startstream local demo   # Secondary + brand anonymisation
+startstream local demo   # Secondary + brand anonymisation (all brands)
+startstream local global # Secondary + selective anonymisation
 stopstream               # Stop all instances
 ```
 
@@ -42,6 +44,7 @@ Or manually: `USE_PRIMARY_DATABASE=true DEMO_MODE=true streamlit run src/ui/app.
 |----------|--------|---------|---------|
 | `USE_PRIMARY_DATABASE` | `true`/`false` | `false` | `true` = MS-01 remote database, `false` = localhost |
 | `DEMO_MODE` | `true`/`false` | `false` | Anonymises brand names for presentations |
+| `DEMO_PROTECT_MEDIA_OWNER` | media owner name | `""` | When set with DEMO_MODE, campaigns with this media owner show real brands |
 | `LOG_LEVEL` | `DEBUG`/`INFO`/`WARNING`/`ERROR` | `INFO` | Logging verbosity |
 | `ENVIRONMENT` | `development`/`production` | `production` | Environment identifier |
 
@@ -85,11 +88,31 @@ src/
 
 ## Database
 
-- **18 tables + 1 view**, 19 indexes, 57 GB total
+- **18 tables + 1 view + 7 mobile index cache tables**, ~62 GB total
 - Key tables: `cache_route_impacts_15min_by_demo` (44 GB), `mv_playout_15min` (8.6 GB), `mv_campaign_browser` (836 campaigns)
+- Mobile index cache tables (`cache_mi_*`): pre-aggregated impacts at various grains, built by `scripts/import_mobile_index.py --cache-only`
 - All data is pre-built by `route-playout-pipeline` — this app only reads
 - Export: `exports/route_poc_adwanted_20260205.dump` (5.7 GB compressed)
 - Schema reference: `docs/10-database-schema.md`
+
+### PostgreSQL WAL Warning
+
+**NEVER run bulk inserts (millions of rows) without CHECKPOINT calls between operations.** PostgreSQL WAL (Write-Ahead Log) files accumulate during large writes and can consume hundreds of GB of hidden disk space before a checkpoint reclaims them. The `cache_mi_frame_hourly` table (52M rows) once generated ~1.6 TB of temporary WAL, nearly filling the disk.
+
+Rules for bulk database operations:
+- Always `COMMIT` then `CHECKPOINT` between large table inserts
+- Monitor disk space with `df -h /` during long-running builds
+- Break inserts of 10M+ rows into batches if possible
+- Check WAL accumulation: `SELECT pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), '0/0')) as wal_size;`
+
+### NEVER Run Long Database Operations as Background Tasks
+
+**NEVER use Claude Code background tasks (`run_in_background`) for database scripts that run longer than ~2 minutes.** If the conversation compacts or the context resets, background DB connections become orphaned — they keep running with no way to monitor or stop them. An orphaned cache build query once consumed 803 GB of temp files before being discovered.
+
+Instead:
+- Run long DB scripts in a **separate terminal** (e.g. `uv run python scripts/import_mobile_index.py --cache-only`)
+- Monitor from Claude Code using `psql` queries to check progress (row counts, `pg_stat_activity`)
+- If a script must be killed, always `SELECT pg_terminate_backend(pid)` then `CHECKPOINT` to reclaim space
 
 ---
 
@@ -124,4 +147,4 @@ Full index at `docs/README.md`. Key documents:
 
 ---
 
-*Last Updated: 7 February 2026*
+*Last Updated: 9 February 2026*

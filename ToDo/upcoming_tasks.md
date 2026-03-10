@@ -63,17 +63,36 @@
 
 ---
 
-## Completed: Mobile Volume Index Overlay (5 March 2026)
+## In Progress: Mobile Volume Index — Dual Index + Performance (5-9 March 2026)
 
-- Built mobile volume index feature allowing econometricians to overlay mobile footfall-adjusted impacts on charts
-- CSV import script (`scripts/import_mobile_index.py`) with ISO week date-shifting (2024 to 2025)
-- Query layer: LEFT JOIN at frame x hour granularity, COALESCE to 1.0 for missing index data
-- Time Series tab: dual-line charts (raw blue solid, indexed orange dashed) + weekly comparison section
-- Detailed Analysis tab: coverage indicator when index data is available
-- Exports: three columns (impacts, mobile_index, impacts_mobile_indexed) when toggle is active
-- Scope limited to impacts only — reach, cover, GRP, frequency are unaffected
-- Documentation: `Claude/docs/Documentation/MOBILE_VOLUME_INDEX.md`
+**Status**: Real data imported, dual toggles implemented, UI caching done. Cache build finishing. Uncommitted.
+
+### What's Done (9 Mar)
+- Imported 99.87M rows from analyst's v2 MV (`cristina.oa_frames_hourly_index_v2`)
+- Dual index support: `average_index` (mean) + `median_index` (median, more robust to outliers)
+- Two independent UI toggles: "Average-Indexed Impacts" / "Median-Indexed Impacts"
+- All 6 tabs updated for dual index display (average=orange, median=purple)
+- `@st.cache_data` wrappers for all MI queries + geographic + demographics + header queries
+- Optimised cache build written (temp table approach — 6x JOIN → 1x JOIN + 6 aggregations)
+- Performance plan: `Claude/Plans/2026-03-09-performance-optimisation.md`
+- Handover: `Claude/handover/2026-03-09-dual-index-and-performance.md`
+
+### What's Done (5-6 Mar)
+- Mobile index overlay on ALL 6 tabs
+- 7 pre-aggregated cache tables for performance
+- Import scripts (CSV + DB-to-DB) with `--cache-only` and `--no-cache` flags
+- Query layer reads from cache tables (8 functions)
+- All bugs fixed: GROUP BY errors, WAL explosion, /1000 double-division, week matching
 - Branch: `feature/mobile-volume-index`
+
+### Remaining Steps
+- [ ] Wait for `cache_mi_coverage` to finish building
+- [ ] Test the app with both toggles in browser
+- [ ] Test optimised cache build (`--cache-only` with temp table approach)
+- [ ] Commit all changes
+- [ ] Run full test suite: `uv run pytest tests/ -v`
+- [ ] Implement Phase 2-3 performance optimisations (connection pooling, missing indexes)
+- [ ] Review and merge branch to main
 
 ---
 
@@ -200,4 +219,4 @@ Not blocking; investigate separately.
 
 ---
 
-*Last Updated: 5 March 2026*
+*Last Updated: 6 March 2026*
