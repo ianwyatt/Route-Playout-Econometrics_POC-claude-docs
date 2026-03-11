@@ -63,6 +63,18 @@
 
 ---
 
+## Uncommitted: Excel Export Fixes (11 March 2026)
+
+**Status**: Code changes complete and tested. Awaiting commit approval.
+**Branch**: `feature/mobile-volume-index`
+
+3 files modified:
+- `src/ui/utils/export/excel.py` — `(000s)` column headers, MI column reordering, Frame Weekly sheet
+- `src/ui/utils/export/data.py` — Frame Weekly data gathering with MI merge
+- `src/ui/utils/export_dialog.py` — Brand name in export filename
+
+---
+
 ## Next Up: Phase 3 Performance Optimisation + Code Refactoring
 
 **Status**: Phase 1 caching complete. Phase 3 items ready to implement.
@@ -85,6 +97,36 @@
 
 ### Handover
 - `Claude/handover/SESSION_2026-03-10_MOBILE_INDEX_UI_POLISH_AND_WEEKLY_FIX.md`
+
+---
+
+## Completed: Excel Export Fixes & Econometrician Pack (11 March 2026)
+
+**Branch**: `feature/mobile-volume-index`
+
+- Fixed 3 export issues: missing `(000s)` headers, MI columns at end of sheets, missing Frame Weekly sheet
+- Added brand name to export filenames (`campaign_18273_dominos_data.xlsx`)
+- Re-exported all 4 campaigns with MI enabled via browser automation
+- Econometrician pack: `docs/Documentation/mobile-index/econometrician-pack/`
+  - 4 Excel exports (H&M, Lidl, HSBC, Domino's) — all verified with 9 sheets
+  - 18 screenshots (overview + exec summary for each campaign)
+  - Outline-ready markdown briefing with embedded image references
+- Handover: `handover/SESSION_2026-03-11_EXPORT_FIXES_AND_ECONOMETRICIAN_PACK.md`
+
+---
+
+## Completed: Mobile Index Venue Verification Research (10 March 2026)
+
+**Branch**: research session (docs repo only)
+
+- 7 independent investigations across 22 UK stadiums and venues
+- 6 venues confirmed, 6 likely, 5 plausible, 3 unconfirmed, 2 no data
+- Sunderland 35x spike confirmed: Bruce Springsteen concert, 22 May 2024
+- Old Trafford: 75% Man Utd fixture match rate across 32 spike dates
+- Overnight spikes confirmed as transport hub signal (Lime Street, Reading station)
+- 58% of extreme spikes have no nearby venue — high street/retail/commuter patterns
+- Research outputs: `docs/Research/venue-verification/` (8 files)
+- Research scripts: `scripts/research_venue_proximity.py`, `scripts/research_sunderland_deep_dive.py`, `scripts/research_stretford_pattern.py`, `scripts/research_glasgow_cluster.py`, `scripts/research_overnight_pattern.py`, `scripts/research_top_spike_dates.py`, `scripts/research_venue_distance_matrix.py`
 
 ---
 
@@ -212,6 +254,28 @@ Not blocking; investigate separately.
 
 ---
 
+## Future: Venue Proximity Features (from MI Venue Verification Research)
+
+**Status**: Research complete (10 March 2026). App features not yet built.
+**Source**: `docs/Research/venue-verification/00-SUMMARY.md`
+
+### App Development Ideas
+
+- [ ] **Venue proximity flag on Geographic tab** — auto-flag frames within 500m/1km of known venues (22 stadiums already geocoded in research)
+- [ ] **Event-driven spike indicator** — highlight frames/dates with index > 5x in Frame Audiences, with contextual tooltip
+- [ ] **Venue distance column** on Frame Audiences campaign tab — show nearest known venue and distance for each frame
+- [ ] **Expand venue database** beyond football — concert venues (O2 Arena, Manchester Arena, SSE Hydro), major transport hubs, shopping centres
+
+### Data Quality Items
+
+- [ ] Clean `route_frame_details` duplicate `environment_name` values (`Rail Station` vs `RailStation`, `Shopping Centre Interior` vs `ShoppingCentreInterior`)
+- [ ] Investigate MI coverage gaps — national coverage only 3.8%; Villa Park (1 MI frame), Reading (0 MI frames), Tottenham (1.1%)
+- [ ] Investigate BST→GMT clock change artefact — 27 Oct overnight duplication (identical index values 00–04) may affect other autumn dates
+- [ ] Investigate Six Nations gap at Cardiff — autumn internationals captured but Feb-Mar invisible
+- [ ] Consider seasonal normalisation — July peak vs December secondary may affect cross-season campaign comparisons
+
+---
+
 ## Future Enhancements
 
 - Cliff-drop campaign comparison view (see above)
@@ -226,4 +290,4 @@ Not blocking; investigate separately.
 
 ---
 
-*Last Updated: 6 March 2026*
+*Last Updated: 11 March 2026*
