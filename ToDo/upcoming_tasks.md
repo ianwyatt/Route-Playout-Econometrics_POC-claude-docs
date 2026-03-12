@@ -1,6 +1,22 @@
 # Upcoming Tasks
 
-## Next Priority: DigitalOcean Deployment
+## Next Priority: Private Repository for Future Development
+
+**Status**: Not started. Decision made 11 March 2026.
+
+The public repo (`Route-Playout-Econometrics_POC`) remains as the Adwanted reference — it contains no commercially sensitive data. Future development (mobile index, deployment, new features) should move to a **new private repository** to avoid exposing data supplier names, commercial arrangements, and internal research.
+
+### To Do
+- [ ] Create private repo on GitHub + Gitea (e.g., `Route-Playout-Econometrics` or `Pharos`)
+- [ ] Clone from current public repo as starting point
+- [ ] Move mobile index technical docs (`116.05`, `116.06`) into the new repo's `docs/`
+- [ ] Set up claude-docs sibling repo for the new private repo
+- [ ] Update deployment runbook to reference the private repo
+- [ ] Public repo stays frozen at current state for Adwanted
+
+---
+
+## DigitalOcean Deployment
 
 **Status**: Runbook complete. Ready to execute on DO infrastructure.
 
@@ -63,18 +79,6 @@
 
 ---
 
-## Uncommitted: Excel Export Fixes (11 March 2026)
-
-**Status**: Code changes complete and tested. Awaiting commit approval.
-**Branch**: `feature/mobile-volume-index`
-
-3 files modified:
-- `src/ui/utils/export/excel.py` — `(000s)` column headers, MI column reordering, Frame Weekly sheet
-- `src/ui/utils/export/data.py` — Frame Weekly data gathering with MI merge
-- `src/ui/utils/export_dialog.py` — Brand name in export filename
-
----
-
 ## Next Up: Phase 3 Performance Optimisation + Code Refactoring
 
 **Status**: Phase 1 caching complete. Phase 3 items ready to implement.
@@ -115,18 +119,31 @@
 
 ---
 
-## Completed: Mobile Index Venue Verification Research (10 March 2026)
+## Completed: Mobile Index Venue Verification Research (10-11 March 2026)
 
 **Branch**: research session (docs repo only)
 
+### Round 1 (10 March) — 12 investigations
 - 7 independent investigations across 22 UK stadiums and venues
 - 6 venues confirmed, 6 likely, 5 plausible, 3 unconfirmed, 2 no data
 - Sunderland 35x spike confirmed: Bruce Springsteen concert, 22 May 2024
 - Old Trafford: 75% Man Utd fixture match rate across 32 spike dates
 - Overnight spikes confirmed as transport hub signal (Lime Street, Reading station)
 - 58% of extreme spikes have no nearby venue — high street/retail/commuter patterns
-- Research outputs: `docs/Research/venue-verification/` (8 files)
-- Research scripts: `scripts/research_venue_proximity.py`, `scripts/research_sunderland_deep_dive.py`, `scripts/research_stretford_pattern.py`, `scripts/research_glasgow_cluster.py`, `scripts/research_overnight_pattern.py`, `scripts/research_top_spike_dates.py`, `scripts/research_venue_distance_matrix.py`
+
+### Round 2 (11 March) — Investigation 13 + stadium OA audit
+- **Playout window event verification**: 85% of top 20 spike dates (Aug-Oct 2024) match confirmed events
+- 55% Premier League, 20% cultural events (Notting Hill Carnival, Billy Joel concert), 15% non-event retail
+- **Stadium OA audit**: all 4 major stadiums (Wembley, Emirates, Stamford Bridge, Etihad) have zero MI data in their immediate OAs — systemic coverage gap
+- Wembley: anti-correlated (displacement from road closures), Emirates: 70% match-day uplift on Holloway Rd, Stamford Bridge: 38%, Etihad: single MI frame
+- **MI methodology reframed**: MI measures deviation from typical day-of-week behaviour — this is working as designed, not a flaw. If Route's base audiences don't capture regular event footfall, that's a Route data inputs limitation, not MI
+- Updated all research docs and briefs to remove "baseline contamination" / "normalisation bias" language
+- Created briefing update prompt: `docs/Documentation/2026-03-10_MI_VENUE_RESEARCH_BRIEFING_UPDATE_PROMPT.md`
+
+### Research outputs
+- `docs/Research/venue-verification/` (13 investigations + 00-SUMMARY.md)
+- Research scripts: `scripts/research_*.py` (7 scripts)
+- Football fixtures reference: `docs/Research/football-fixtures-aug-oct-2024.md`
 
 ---
 
