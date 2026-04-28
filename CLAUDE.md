@@ -2,12 +2,36 @@
 
 ## Repository Setup
 
-| Repo | What Goes Here | Where to Push |
-|------|----------------|---------------|
-| **Code repo** (`Route-Playout-Econometrics_POC`) | Python, Streamlit, src/, tests/ | GitHub (`origin`) + Gitea (`zimacube`) |
-| **Docs repo** (`Route-Playout-Econometrics_POC-claude-docs`) | CLAUDE.md, handovers, todos | **Gitea ONLY** — NEVER push to GitHub |
+Three-remote pattern. Adwanted use the public repo as their production reference, so `main` on the public repo only advances via tagged releases.
 
-The code repo has symlinks (`.claude/` and `Claude/`) pointing to the docs repo. Pre-push hooks enforce these rules automatically. New machine setup: see `Claude/SETUP.md`.
+**Code repo (`Route-Playout-Econometrics_POC`)**
+
+| Remote | URL | Role |
+|--------|-----|------|
+| `origin` | GitHub private — `RouteResearch/Route-Playout-Econometrics_POC-dev` | Daily driver. `git push` defaults here. |
+| `public` | GitHub public — `RouteResearch/Route-Playout-Econometrics_POC` | **Tags only.** Adwanted's reference. Pre-push hook blocks branch pushes; annotated tags required. |
+| `zimacube` | Gitea (Tailscale) | Backup mirror. |
+
+**Docs repo (`Route-Playout-Econometrics_POC-claude-docs`)** — handovers, todos, CLAUDE.md, plans
+
+| Remote | URL | Role |
+|--------|-----|------|
+| `origin` | GitHub private — `ianwyatt/Route-Playout-Econometrics_POC-claude-docs` | Daily driver. Permitted by `.claude/route-mode` marker in the docs repo. |
+| `zimacube` | Gitea (Tailscale) | Backup mirror. |
+
+Docs repo NEVER goes to public GitHub — pre-push hook blocks it unless the `.claude/route-mode` marker is present (Route business projects only).
+
+The code repo has symlinks (`.claude/` and `Claude/`) pointing to the docs repo. New machine setup: see `Claude/SETUP.md`.
+
+### Release workflow (publishing to Adwanted)
+
+```bash
+git tag -a vX.Y-<theme> -m "release notes"
+git push origin vX.Y-<theme>      # tag to private dev
+git push public vX.Y-<theme>      # tag to public reference
+```
+
+Never `git push public main` or any branch — the pre-push hook will reject it.
 
 **NEVER commit without explicit user approval.** Wait for "commit" or "commit and push".
 
