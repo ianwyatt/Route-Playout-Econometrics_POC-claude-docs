@@ -34,12 +34,11 @@ Both checkouts have `.claude` and `Claude` symlinks pointing at the docs repo, s
 
 ```bash
 cd ~/projects/Route-Playout-Econometrics_POC-postgres-demo
-startstream                          # default: primary database (MS-01)
-# OR
-startstream demo                     # + brand anonymisation (all brands)
-startstream global                   # + selective anonymisation (Global campaigns show real brands)
+startstream                          # default: primary database (MS-01), nothing anonymised
+startstream demo                     # + brand anonymisation only
+startstream global                   # selective: real Global brands, others anonymised
 startstream local                    # local Postgres on this machine
-startstream local demo               # local Postgres + anonymisation
+startstream local demo               # local Postgres + brand anonymisation
 startstream local global             # local Postgres + selective anonymisation
 stopstream                           # stop all instances
 ```
@@ -51,6 +50,32 @@ The worktree opens on `localhost:8504` (same default port as the main checkout).
 ```bash
 USE_PRIMARY_DATABASE=true streamlit run src/ui/app.py --server.port 8505
 ```
+
+### Demo invocation reference
+
+`startstream demo` only anonymises **brands** by default. Media owners and buyers stay visible. For tighter anonymisation, use env-var prefixes (no shell-config change needed):
+
+| Audience / scenario | Invocation |
+|---|---|
+| Internal team review (everything visible) | `startstream` |
+| Brand-anonymised demo (default `demo`) | `startstream demo` |
+| **Full client-safe demo** (brands + media owners + buyers hidden) | `DEMO_ANONYMISE_MEDIA_OWNERS=true DEMO_ANONYMISE_BUYERS=true startstream demo` |
+| Brands + media owners hidden, buyers visible | `DEMO_ANONYMISE_MEDIA_OWNERS=true startstream demo` |
+| Brands + buyers hidden, media owners visible | `DEMO_ANONYMISE_BUYERS=true startstream demo` |
+| Global team presentation (real Global, anonymise competitors) | `startstream global` |
+
+All variants accept `local` for the secondary database (`startstream demo local`, `startstream global local`, etc.).
+
+**To make full client-safe anonymisation the default for this worktree**, edit the worktree's `.env` and add:
+
+```
+DEMO_ANONYMISE_MEDIA_OWNERS=true
+DEMO_ANONYMISE_BUYERS=true
+```
+
+Then any `startstream demo*` invocation hides everything. Won't affect non-demo runs (the master `DEMO_MODE=true` gate still applies).
+
+Full anonymisation reference (env vars, where applied, cookbook): `docs/03-demo-mode.md` in the code repo.
 
 ---
 
