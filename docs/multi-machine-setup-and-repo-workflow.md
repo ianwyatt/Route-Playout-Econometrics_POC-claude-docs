@@ -206,7 +206,7 @@ For Plan A onward, see `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`.
 
 1. `c193b66` (three-remote-pattern documentation), `cd94940` (H1 spec), `07f0117` (H1 plans) have all been pushed to the docs repo's GitHub origin as of 2026-05-01.
 2. The CLAUDE.md trim from the previous session is still uncommitted in the docs repo working tree on the Mac. Worth committing during the next docs-repo session — the trim removed ~74 lines of derivable content (source tree, env table, doc pointer list, tech stack) and added the "Next Directions" section flagging DuckDB as committed and React as under consideration.
-3. Pre-existing dirty state in the docs repo (mobile-index file renames, `reference/route-api-reference.md`, `handover/SESSION_2026-03-12_OUTLINE_DOCS_AND_PUBLIC_REPO_CLEANUP.md`) is unrelated to the infra work and should be triaged in its own session.
+3. Pre-existing dirty state in the docs repo (mobile-index file renames, `reference/route-api-reference.md`, `Handover/SESSION_2026-03-12_OUTLINE_DOCS_AND_PUBLIC_REPO_CLEANUP.md`) is unrelated to the infra work and should be triaged in its own session.
 
 ## Related References
 

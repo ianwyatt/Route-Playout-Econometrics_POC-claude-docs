@@ -27,7 +27,7 @@ When picking up future-phase work, **read this doc first** — it's the single s
 
 ## Cross-references
 
-- Pipeline team's canonical operational reference: `Claude/handover/POC_INTEGRATION.md`
+- Pipeline team's canonical operational reference: `Claude/Handover/POC_INTEGRATION.md`
 - POC migration plan: `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`
 - POC architectural spec: `Claude/Plans/2026-04-29-h1-duckdb-fastapi-react-foundation.md`
 
