@@ -125,7 +125,7 @@ Rsync replica fanout to `playout-frontend` LXC via `scripts/tools/duckdb_post_wr
 **Pipeline delivered:**
 - `mv_campaign_browser` rebuilt: **3,064 rows × 29 cols**
 - `mv_campaign_browser_summary` rebuilt: 1 row × 24 cols
-- Dim refresh resolved 224 cold entity IDs (2 buyers, 1 media owner, 221 brands) via Space API; zero `'Unknown'` values
+- Dim refresh resolved 224 cold entity IDs (2 buyers, 1 media owner, 221 brands) via Space API; zero `'Unknown'` values. Final dim sizes: `cache_space_brands` 408 rows, `cache_space_media_owners` 7 rows, `cache_space_buyers` 3 rows (Talon Outdoor Limited, Talon Outdoor Limited (Atlas), Havas Media Limited).
 - Snapshot live at `/var/lib/route/snapshots/route_poc_cache.latest.duckdb` (~87 GB, md5-verified bit-perfect against live DB)
 - Reach cols all NULL as agreed; 200 rows have `route_release_id = NULL` (non_route_measured_frames — campaigns whose start_date had no Route-measured frames at that release)
 
@@ -236,7 +236,7 @@ The cover% calculation in the original Postgres MV joined `cache_demographic_uni
 562 (campaign × date) pairs in 2025 have playouts whose frames aren't in `route_frames` for the per-date release. These are inherent — some OOH frames aren't measured by Route. Cacher classifies as `data_quality_skip` and writes nothing. ~98.5% pair coverage is the real ceiling, not 100%.
 
 ### Buyer scope — non-Talon buyers exist
-~~`cache_space_buyers` is access-capped to Talon~~ **Corrected 2026-05-01:** non-Talon buyers exist in the data. Buyer 15921 is Havas Media Limited (not a Talon sub-brand). After the dim refresh, all buyer entity IDs resolve to canonical names via Space API. Surface buyer names verbatim — no Talon-specific code paths. The earlier "access-capped to Talon" framing in `POC_INTEGRATION.md` was incorrect; pipeline team has corrected it.
+~~`cache_space_buyers` is access-capped to Talon~~ **Corrected 2026-05-01:** non-Talon buyers exist in the data. Post dim-refresh, `cache_space_buyers` has 3 rows: Talon Outdoor Limited, Talon Outdoor Limited (Atlas), Havas Media Limited. All buyer entity IDs resolve to canonical names via Space API. Surface buyer names verbatim — no Talon-specific code paths. The earlier "access-capped to Talon" framing in `POC_INTEGRATION.md` was incorrect; pipeline team has corrected it.
 
 ### `route_release_id = NULL` for non-route-measured campaigns
 200 rows in `mv_campaign_browser` (v1) have `route_release_id = NULL` — these are campaigns whose `start_date` had no Route-measured frames at the corresponding release. Pipeline's `non_route_measured_frames` convention. Their impacts cols are also NULL or partially populated. Existing flighted-campaign N/A handling renders them gracefully — they appear in the browser list with NULL reach + NULL release, sorting to the bottom under `NULLS LAST`. Cover% join to `cache_demographic_universes` will skip them (NULL release ID can't match any universe row), which is the correct behaviour.
