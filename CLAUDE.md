@@ -87,8 +87,8 @@ Fallback pattern in `impacts.py`: try precomputed `mv_*` first, fall back to raw
 
 H1 is decomposed into three executable plans, each producing ship-able software:
 
-- **Plan A — DuckDB swap** (`Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`) — replace Postgres with DuckDB on the existing Streamlit app. Substrate ready (snapshot live, ops note delivered). Branch: `feature/duckdb-migration`.
-- **Plan B — FastAPI layer** (`Claude/Plans/2026-04-29-h1b-fastapi-layer-plan.md`) — thin JSON layer over the existing query functions, plus new advertiser-trends endpoints.
+- **Plan A — DuckDB swap** (`Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`) — Postgres → DuckDB on the existing Streamlit app. **Shipped 2026-05-01** at `e358699` on `feature/duckdb-migration`; 33/33 shape tests green, Streamlit smoke clean. Branch stays open for Plans B/C until merge. Completion handover: `Claude/Handover/2026-05-01_plan-a-complete-h1a-shipped.md`.
+- **Plan B — FastAPI layer** (`Claude/Plans/2026-04-29-h1b-fastapi-layer-plan.md`) — thin JSON layer over the existing query functions, plus new advertiser-trends endpoints. Next session starts here.
 - **Plan C — React advertiser views** (`Claude/Plans/2026-04-29-h1c-react-advertiser-views-plan.md`) — Vite + React + TypeScript app on `localhost:5173` consuming Plan B's API; ports the Pepsi/Talon Netlify visual language; ships single-advertiser detail + overview.
 
 Architectural spec covering all three: `Claude/Plans/2026-04-29-h1-duckdb-fastapi-react-foundation.md`.
