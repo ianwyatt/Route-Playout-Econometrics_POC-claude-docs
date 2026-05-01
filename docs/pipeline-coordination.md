@@ -2,7 +2,7 @@
 
 Living record of cross-team coordination between the POC and the Route playout pipeline team. Captures schema contracts, open coordination items, resolved decisions, and operational gotchas. Intended to be appended to as new rounds happen, not archived.
 
-**Last updated:** 2026-05-02 (ops note delivered, rsync ready)
+**Last updated:** 2026-05-02 (ops note delivered, rsync ready, Postgres removed from POC scope)
 
 ---
 
@@ -118,6 +118,18 @@ Rsync replica fanout to `playout-frontend` LXC via `scripts/tools/duckdb_post_wr
 ---
 
 ## Resolved rounds
+
+### 2026-05-02 (later) — POC scope decision: Postgres removed entirely
+
+**Decision:** The POC is removing the Postgres connection rather than maintaining a dual-backend `BACKEND=postgres|duckdb` switch. DuckDB becomes the sole read-only query backend. The legacy `feature/mobile-volume-index` branch on Postgres remains as-is for reference but is not migrated.
+
+**Implications:**
+- Plan A simplified — no `BACKEND` env var, no dual-backend support, no Postgres regression test, no `execute_query` helper that branches on connection type. The shape test (formerly "parity test") runs against DuckDB only.
+- `psycopg2` no longer imported by `src/db/queries/*.py`. Stays in `pyproject.toml` for now (cheap, may be useful for one-off scripts).
+- `.env.example` drops all Postgres vars; `DUCKDB_PATH` is the only required new var.
+- Resolved-round entries above that mention "no regression on Postgres" or "BACKEND env var" reflect a transition state that no longer exists. Plan A docs were updated 2026-05-02 to remove these references.
+
+**No pipeline-team coordination required** — this is a POC-internal scope decision. The pipeline team's DuckDB substrate is unaffected.
 
 ### 2026-05-02 — Rsync ops note delivered
 

@@ -4,9 +4,11 @@
 
 **Goal:** Replace PostgreSQL with DuckDB as the read-only query backend for the existing Streamlit app, with zero changes to UI behaviour. Establishes the data substrate every subsequent plan depends on.
 
-**Architecture:** A `BACKEND=postgres|duckdb` env var selects the engine in `src/db/queries/connection.py`. All `get_*_sync` query functions return `List[Dict]` regardless of backend (DuckDB results wrapped via a small `cursor.description`-based helper). Dialect differences are mechanical (`%s` → `?`, casts). A pytest parity test runs every query against both backends and asserts shape consistency, catching dialect drift before it surfaces in the UI.
+**Scope note (2026-05-02):** Postgres is being removed entirely, not maintained alongside. No dual-backend support, no `BACKEND` env var, no Postgres regression testing. The query layer becomes DuckDB-only. The pre-existing `feature/mobile-volume-index` branch on Postgres remains as-is for reference but is not targeted for migration.
 
-**Tech Stack:** Python 3.11+, psycopg2 (existing), duckdb (new), pytest, uv. No Streamlit changes; no new dependencies in the UI layer.
+**Architecture:** All `get_*_sync` query functions in `src/db/queries/` connect to DuckDB read-only via a single shared connection helper, returning `List[Dict]` (DuckDB tuple results wrapped via a small `cursor.description`-based helper). Dialect changes from Postgres are mechanical (`%s` → `?`, ANSI casts). A pytest shape-validation test runs every query function against the DuckDB fixture and asserts result shape, catching dialect issues before they surface in the UI.
+
+**Tech Stack:** Python 3.11+, duckdb (new — replaces psycopg2 in the query path), pytest, uv. No Streamlit changes; no new dependencies in the UI layer. `psycopg2` stays in `pyproject.toml` for now (cheap, may be useful for one-off scripts) but no longer imported by the query modules.
 
 **Spec:** `Claude/Plans/2026-04-29-h1-duckdb-fastapi-react-foundation.md`
 
@@ -16,20 +18,20 @@
 
 | Path | Action | Responsibility |
 |---|---|---|
-| `src/db/queries/connection.py` | Modify | Backend selector; opens postgres or duckdb connection per env |
-| `src/db/queries/_dict_cursor.py` | Create | DuckDB cursor → list-of-dicts helper |
-| `src/db/queries/campaigns.py` | Modify | Param style sweep |
-| `src/db/queries/impacts.py` | Modify | Param style sweep |
-| `src/db/queries/reach.py` | Modify | Param style sweep |
-| `src/db/queries/geographic.py` | Modify | Param style sweep |
-| `src/db/queries/demographics.py` | Modify | Param style sweep |
-| `src/db/queries/frame_audience.py` | Modify | Param style sweep |
-| `src/db/queries/mobile_index.py` | Modify | Param style sweep |
-| `tests/db/test_query_parity.py` | Create | Parity test across backends |
+| `src/db/queries/connection.py` | Modify | Open shared DuckDB read-only connection from `DUCKDB_PATH` |
+| `src/db/queries/_dict_cursor.py` | Create | DuckDB cursor → list-of-dicts helper + `execute_query` wrapper |
+| `src/db/queries/campaigns.py` | Modify | Param-style sweep + replace psycopg2 cursor blocks with `execute_query` |
+| `src/db/queries/impacts.py` | Modify | As above |
+| `src/db/queries/reach.py` | Modify | As above |
+| `src/db/queries/geographic.py` | Modify | As above |
+| `src/db/queries/demographics.py` | Modify | As above |
+| `src/db/queries/frame_audience.py` | Modify | As above |
+| `src/db/queries/mobile_index.py` | Modify | As above |
+| `tests/db/test_query_shape.py` | Create | Shape-validation test: every query function returns valid `List[Dict]` against DuckDB |
 | `tests/db/conftest.py` | Create | Fixtures: known campaign IDs, query fixture catalogue |
 | `tests/fixtures/route_poc_test.duckdb` | Create (gitignored) | Small test DB |
 | `scripts/build_test_duckdb.py` | Create | Generates fixture DB from production DuckDB |
-| `.env.example` | Modify | Document `BACKEND`, `DUCKDB_PATH` |
+| `.env.example` | Modify | Document `DUCKDB_PATH` |
 | `pyproject.toml` | Modify | Add `duckdb` dependency |
 
 ---
@@ -269,7 +271,7 @@ git commit -m "feat: add DuckDB dict-row helper"
 
 ---
 
-### Task 3: Backend selector in connection.py
+### Task 3: DuckDB-only connection in connection.py
 
 **Files:**
 - Modify: `src/db/queries/connection.py`
@@ -279,34 +281,23 @@ git commit -m "feat: add DuckDB dict-row helper"
 Create `tests/db/test_connection.py`:
 
 ```python
-import os
+import duckdb
 import pytest
 from src.db.queries.connection import get_db_connection
 
 
-def test_postgres_backend_returns_psycopg2_connection(monkeypatch):
-    monkeypatch.setenv("BACKEND", "postgres")
-    monkeypatch.setenv("USE_PRIMARY_DATABASE", "false")
-    monkeypatch.setenv("POSTGRES_HOST_SECONDARY", "localhost")
-    conn = get_db_connection()
-    assert type(conn).__module__.startswith("psycopg2")
-    conn.close()
-
-
-def test_duckdb_backend_returns_duckdb_connection(monkeypatch, tmp_path):
-    import duckdb
+def test_returns_duckdb_connection(monkeypatch, tmp_path):
     db_path = tmp_path / "smoke.duckdb"
     duckdb.connect(str(db_path)).close()  # create empty
-    monkeypatch.setenv("BACKEND", "duckdb")
     monkeypatch.setenv("DUCKDB_PATH", str(db_path))
     conn = get_db_connection()
     assert type(conn).__module__.startswith("duckdb")
     conn.close()
 
 
-def test_unknown_backend_raises(monkeypatch):
-    monkeypatch.setenv("BACKEND", "sqlite")
-    with pytest.raises(ValueError, match="Unknown BACKEND"):
+def test_missing_duckdb_path_raises(monkeypatch):
+    monkeypatch.delenv("DUCKDB_PATH", raising=False)
+    with pytest.raises(ValueError, match="DUCKDB_PATH"):
         get_db_connection()
 ```
 
@@ -316,75 +307,36 @@ def test_unknown_backend_raises(monkeypatch):
 uv run pytest tests/db/test_connection.py -v
 ```
 
-Expected: tests fail (BACKEND not yet honoured).
+Expected: tests fail (current `connection.py` still uses Postgres).
 
-- [ ] **Step 3: Modify `connection.py` to add backend selector**
-
-Replace `src/db/queries/connection.py` content with:
+- [ ] **Step 3: Replace `connection.py` with DuckDB-only**
 
 ```python
-# ABOUTME: Database connection management for synchronous queries.
-# ABOUTME: Selects PostgreSQL or DuckDB backend via BACKEND env var.
+# ABOUTME: DuckDB connection management for read-only queries.
+# ABOUTME: All POC query functions go through this single helper.
 
 import os
 from typing import Any
 
-import psycopg2
+import duckdb
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
-def get_db_connection(use_primary: bool = None) -> Any:
-    """Return a database connection based on BACKEND env var.
+def get_db_connection() -> Any:
+    """Return a read-only DuckDB connection on DUCKDB_PATH.
 
-    BACKEND=postgres (default) → psycopg2 connection (primary or secondary).
-    BACKEND=duckdb → DuckDB read-only connection on DUCKDB_PATH.
+    Multiple readers can attach the same file concurrently. Caller is
+    responsible for closing the connection.
     """
-    backend = os.getenv("BACKEND", "postgres").lower()
-
-    if backend == "postgres":
-        return _get_postgres_connection(use_primary)
-    if backend == "duckdb":
-        return _get_duckdb_connection()
-    raise ValueError(f"Unknown BACKEND: {backend!r} (expected 'postgres' or 'duckdb')")
-
-
-def _get_postgres_connection(use_primary: bool = None) -> Any:
-    if use_primary is None:
-        use_primary = os.getenv("USE_PRIMARY_DATABASE", "true").lower() == "true"
-
-    if use_primary:
-        host = os.getenv("POSTGRES_HOST_PRIMARY", "")
-        if not host:
-            raise ValueError(
-                "POSTGRES_HOST_PRIMARY environment variable "
-                "must be set for primary database connection"
-            )
-        return psycopg2.connect(
-            host=host,
-            port=int(os.getenv("POSTGRES_PORT_PRIMARY", "5432")),
-            database=os.getenv("POSTGRES_DATABASE_PRIMARY", "route_poc"),
-            user=os.getenv("POSTGRES_USER_PRIMARY", "postgres"),
-            password=os.getenv("POSTGRES_PASSWORD_PRIMARY", ""),
-        )
-    return psycopg2.connect(
-        host=os.getenv("POSTGRES_HOST_SECONDARY", "localhost"),
-        port=int(os.getenv("POSTGRES_PORT_SECONDARY", "5432")),
-        database=os.getenv("POSTGRES_DATABASE_SECONDARY", "route_poc"),
-        user=os.getenv("POSTGRES_USER_SECONDARY", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD_SECONDARY", ""),
-    )
-
-
-def _get_duckdb_connection() -> Any:
-    import duckdb
-
     path = os.getenv("DUCKDB_PATH", "")
     if not path:
-        raise ValueError("DUCKDB_PATH must be set when BACKEND=duckdb")
+        raise ValueError("DUCKDB_PATH must be set in .env")
     return duckdb.connect(path, read_only=True)
 ```
+
+Note: signature change — the legacy `use_primary: bool = None` parameter is gone. Per-module updates in Tasks 6–12 will drop that argument from each `get_*_sync` call site.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -392,13 +344,13 @@ def _get_duckdb_connection() -> Any:
 uv run pytest tests/db/test_connection.py -v
 ```
 
-Expected: 3 passing tests. (Postgres test may be skipped if no local DB; that's acceptable — note it.)
+Expected: 2 PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add src/db/queries/connection.py tests/db/test_connection.py
-git commit -m "feat: BACKEND env var selects postgres or duckdb"
+git commit -m "feat: replace dual-backend connection with DuckDB-only"
 ```
 
 ---
@@ -530,9 +482,8 @@ import pytest
 
 @pytest.fixture
 def duckdb_env(monkeypatch):
-    """Configure environment for the test DuckDB fixture."""
+    """Point connection.py at the test DuckDB fixture."""
     fixture_path = Path(__file__).parent.parent / "fixtures" / "route_poc_test.duckdb"
-    monkeypatch.setenv("BACKEND", "duckdb")
     monkeypatch.setenv("DUCKDB_PATH", str(fixture_path))
     if not fixture_path.exists():
         pytest.skip(f"Fixture DB not found at {fixture_path}. Run scripts/build_test_duckdb.py.")
@@ -547,18 +498,20 @@ git commit -m "test: add query fixture catalogue and DuckDB env fixture"
 
 ---
 
-### Task 5: Parity test (the linchpin)
+### Task 5: Shape-validation test (the linchpin)
 
 **Files:**
-- Create: `tests/db/test_query_parity.py`
+- Create: `tests/db/test_query_shape.py`
 
-- [ ] **Step 1: Write the parity test**
+This is the spine of the migration. Every `get_*_sync` function runs against the DuckDB fixture and the test asserts its result shape is valid. Failures pinpoint exactly which module needs dialect fixes in Tasks 6–12.
+
+- [ ] **Step 1: Write the shape test**
 
 ```python
-# ABOUTME: Cross-backend parity test for every sync query function.
-# ABOUTME: Asserts each function returns the expected shape on DuckDB.
+# ABOUTME: Shape-validation test for every sync query function on DuckDB.
+# ABOUTME: Catches dialect drift before it surfaces in the UI.
 
-"""Parity test: every get_*_sync function returns valid shape on DuckDB."""
+"""Every get_*_sync function returns valid shape on DuckDB."""
 
 import pytest
 from .query_fixtures import QUERY_FIXTURES
@@ -569,13 +522,11 @@ from .query_fixtures import QUERY_FIXTURES
     QUERY_FIXTURES,
     ids=[f[0] for f in QUERY_FIXTURES],
 )
-def test_query_returns_valid_shape_on_duckdb(label, query_fn, kwargs, duckdb_env):
-    """Each query function should return either a list of dicts or a tuple/scalar
-    appropriate to its signature, on the DuckDB backend."""
+def test_query_returns_valid_shape(label, query_fn, kwargs, duckdb_env):
+    """Each query function returns a list of dicts (most), or a tuple/scalar
+    (a few — e.g. mi_coverage returns Tuple[int, int])."""
     result = query_fn(**kwargs)
 
-    # Some functions return tuples (e.g. mi_coverage), some return ints
-    # (demographic_count), most return list-of-dicts.
     if isinstance(result, list):
         if result:
             assert isinstance(result[0], dict), (
@@ -590,100 +541,107 @@ def test_query_returns_valid_shape_on_duckdb(label, query_fn, kwargs, duckdb_env
 - [ ] **Step 2: Run the test, expect failures**
 
 ```bash
-uv run pytest tests/db/test_query_parity.py -v
+uv run pytest tests/db/test_query_shape.py -v
 ```
 
-Expected: many failures with errors like `syntax error at or near "%"` or similar — these are dialect issues to fix in subsequent tasks.
+Expected: many failures with errors like `Parser Error: syntax error at or near "%"` — these are dialect issues to fix in Tasks 6–12.
 
 - [ ] **Step 3: Capture the failure list**
 
 ```bash
-uv run pytest tests/db/test_query_parity.py -v 2>&1 | tee /tmp/parity_failures.log
+uv run pytest tests/db/test_query_shape.py -v 2>&1 | tee /tmp/shape_failures.log
 ```
 
-Use this log as the worklist for Tasks 6–13. Don't commit anything yet — the parity test is the failing "spec" that the next tasks resolve.
+Use this log as the worklist for Tasks 6–12. Don't commit anything yet — the shape test is the failing "spec" that the next tasks resolve.
 
 ---
 
-### Task 6: Fix dialect issues in `campaigns.py`
+### Task 6: Convert `campaigns.py` to DuckDB
 
 **Files:**
 - Modify: `src/db/queries/campaigns.py`
+- Modify: `src/db/queries/_dict_cursor.py` (add `execute_query` helper if not done in Task 2)
 
 - [ ] **Step 1: Read the current file** to understand its structure
 
 ```bash
-uv run pytest "tests/db/test_query_parity.py::test_query_returns_valid_shape_on_duckdb[campaign_summary]" -v
+uv run pytest "tests/db/test_query_shape.py::test_query_returns_valid_shape[campaign_summary]" -v
 ```
 
 Note the exact error.
 
-- [ ] **Step 2: Sweep `%s` → `?` across the file**
+- [ ] **Step 2: Add `execute_query` helper to `_dict_cursor.py`**
 
-In `src/db/queries/campaigns.py`, replace every parameter placeholder:
-- Find: `%s`
-- Replace with: `?`
-
-Care: only inside SQL strings, not inside Python f-strings or format strings used for non-SQL purposes. Visual review every change.
-
-- [ ] **Step 3: Replace `RealDictCursor` with the dict helper**
-
-For each function that uses `cursor_factory=psycopg2.extras.RealDictCursor`, replace the cursor handling. Pattern to apply:
-
-Before:
-```python
-with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-    cursor.execute(query, (campaign_id,))
-    results = cursor.fetchall()
-    return [dict(row) for row in results]
-```
-
-After:
-```python
-from ._dict_cursor import fetchall_as_dicts
-
-cursor = conn.execute(query, (campaign_id,))  # DuckDB style
-# OR, for postgres compatibility:
-if hasattr(conn, "execute"):  # DuckDB
-    cursor = conn.execute(query, (campaign_id,))
-else:  # psycopg2
-    cursor = conn.cursor()
-    cursor.execute(query, (campaign_id,))
-
-return fetchall_as_dicts(cursor) if hasattr(cursor, "description") else []
-```
-
-A cleaner approach: write a small `execute_query(conn, query, params)` helper in `_dict_cursor.py` that handles both backends:
+Append to `src/db/queries/_dict_cursor.py`:
 
 ```python
-def execute_query(conn, query, params=None):
-    """Execute a query on either psycopg2 or DuckDB connection, returning list-of-dicts."""
-    if hasattr(conn, "cursor") and not hasattr(conn, "fetchall"):
-        # psycopg2 connection
-        import psycopg2.extras
-        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
-            cursor.execute(query, params or ())
-            return [dict(r) for r in cursor.fetchall()]
-    # duckdb connection
+def execute_query(conn, query: str, params=None) -> List[Dict[str, Any]]:
+    """Execute a SELECT on a DuckDB connection, return list of dicts.
+
+    Thin wrapper around conn.execute(...).fetchall() that uses
+    cursor.description to produce dict rows matching what the legacy
+    psycopg2 RealDictCursor produced.
+    """
     cursor = conn.execute(query, params or [])
     return fetchall_as_dicts(cursor)
 ```
 
-Add this helper to `_dict_cursor.py`, then use `execute_query(conn, query, (campaign_id,))` throughout `campaigns.py`.
+- [ ] **Step 3: Sweep `%s` → `?` across `campaigns.py`**
 
-- [ ] **Step 4: Run the campaign parity tests**
+Replace every parameter placeholder inside SQL strings. Care: only inside SQL strings, not Python f-strings used for non-SQL purposes. Visual review every change.
+
+- [ ] **Step 4: Replace `RealDictCursor` blocks with `execute_query`**
+
+For each function, replace the psycopg2 cursor pattern with `execute_query`. Pattern:
+
+Before:
+```python
+import psycopg2
+import psycopg2.extras
+
+def get_campaign_summary_sync(campaign_id: str, use_primary: bool = None):
+    conn = get_db_connection(use_primary)
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cursor:
+            cursor.execute(query, (campaign_id,))
+            results = cursor.fetchall()
+            return [dict(row) for row in results]
+    finally:
+        conn.close()
+```
+
+After:
+```python
+from .connection import get_db_connection
+from ._dict_cursor import execute_query
+
+def get_campaign_summary_sync(campaign_id: str):
+    conn = get_db_connection()
+    try:
+        return execute_query(conn, query, (campaign_id,))
+    finally:
+        conn.close()
+```
+
+Notes:
+- Drop the `use_primary` parameter — it was Postgres-only. Update call sites in `src/ui/app.py` etc. via `grep -rn "use_primary=" src/` and remove the argument.
+- Drop `import psycopg2` and `import psycopg2.extras` from the file.
+- For functions returning a single row (`fetchone`-style), wrap: `result = execute_query(conn, query, params); return result[0] if result else None`.
+- For functions returning a scalar (e.g. `COUNT(*)` lookups), use the lower-level pattern: `cursor = conn.execute(query, params); row = cursor.fetchone(); return row[0] if row else 0`.
+
+- [ ] **Step 5: Run the campaign shape tests**
 
 ```bash
-uv run pytest tests/db/test_query_parity.py -v -k "campaign"
+uv run pytest tests/db/test_query_shape.py -v -k "campaign"
 ```
 
 Expected: PASS for `campaign_summary`, `campaigns_browser`, `campaign_browser_by_id`, `campaign_header`, `campaign_browser_summary`, `platform_stats`.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/db/queries/campaigns.py src/db/queries/_dict_cursor.py
-git commit -m "feat: campaigns.py supports duckdb backend"
+git add src/db/queries/campaigns.py src/db/queries/_dict_cursor.py src/ui/app.py
+git commit -m "feat: campaigns.py converted to duckdb"
 ```
 
 ---
@@ -702,7 +660,7 @@ The fallback pattern in this file (try `mv_*`, fall back to raw cache) is preser
 - [ ] **Step 3: Run impacts parity tests**
 
 ```bash
-uv run pytest tests/db/test_query_parity.py -v -k "impacts"
+uv run pytest tests/db/test_query_shape.py -v -k "impacts"
 ```
 
 Expected: PASS for `daily_impacts`, `hourly_impacts`, `regional_impacts`, `environment_impacts`.
@@ -722,7 +680,7 @@ git commit -m "feat: impacts.py supports duckdb backend"
 
 - [ ] **Step 1: `%s` → `?` sweep**
 - [ ] **Step 2: Apply `execute_query` helper**
-- [ ] **Step 3:** `uv run pytest tests/db/test_query_parity.py -v -k "reach"` — expected PASS for `weekly_reach`, `daily_cumulative_reach`, `full_reach`
+- [ ] **Step 3:** `uv run pytest tests/db/test_query_shape.py -v -k "reach"` — expected PASS for `weekly_reach`, `daily_cumulative_reach`, `full_reach`
 - [ ] **Step 4:** `git add src/db/queries/reach.py && git commit -m "feat: reach.py supports duckdb backend"`
 
 ---
@@ -733,7 +691,7 @@ git commit -m "feat: impacts.py supports duckdb backend"
 
 - [ ] **Step 1: `%s` → `?` sweep**
 - [ ] **Step 2: Apply `execute_query` helper**
-- [ ] **Step 3:** `uv run pytest tests/db/test_query_parity.py -v -k "geographic or regional or environment"` — expected PASS
+- [ ] **Step 3:** `uv run pytest tests/db/test_query_shape.py -v -k "geographic or regional or environment"` — expected PASS
 - [ ] **Step 4:** `git add src/db/queries/geographic.py && git commit -m "feat: geographic.py supports duckdb backend"`
 
 ---
@@ -744,7 +702,7 @@ git commit -m "feat: impacts.py supports duckdb backend"
 
 - [ ] **Step 1: `%s` → `?` sweep**
 - [ ] **Step 2: Apply `execute_query` helper**
-- [ ] **Step 3:** `uv run pytest tests/db/test_query_parity.py -v -k "demographic"` — expected PASS
+- [ ] **Step 3:** `uv run pytest tests/db/test_query_shape.py -v -k "demographic"` — expected PASS
 - [ ] **Step 4:** `git add src/db/queries/demographics.py && git commit -m "feat: demographics.py supports duckdb backend"`
 
 ---
@@ -755,7 +713,7 @@ git commit -m "feat: impacts.py supports duckdb backend"
 
 - [ ] **Step 1: `%s` → `?` sweep**
 - [ ] **Step 2: Apply `execute_query` helper**
-- [ ] **Step 3:** `uv run pytest tests/db/test_query_parity.py -v -k "frame_audience"` — expected PASS for all `frame_audience_*` cases
+- [ ] **Step 3:** `uv run pytest tests/db/test_query_shape.py -v -k "frame_audience"` — expected PASS for all `frame_audience_*` cases
 - [ ] **Step 4:** `git add src/db/queries/frame_audience.py && git commit -m "feat: frame_audience.py supports duckdb backend"`
 
 ---
@@ -766,28 +724,22 @@ git commit -m "feat: impacts.py supports duckdb backend"
 
 - [ ] **Step 1: `%s` → `?` sweep**
 - [ ] **Step 2: Apply `execute_query` helper, including the `mobile_index_table_exists` query**
-- [ ] **Step 3:** `uv run pytest tests/db/test_query_parity.py -v -k "mi_"` — expected PASS for all `mi_*` cases
+- [ ] **Step 3:** `uv run pytest tests/db/test_query_shape.py -v -k "mi_"` — expected PASS for all `mi_*` cases
 - [ ] **Step 4:** `git add src/db/queries/mobile_index.py && git commit -m "feat: mobile_index.py supports duckdb backend"`
 
 ---
 
-### Task 13: Full parity test run
+### Task 13: Full shape test run
 
-- [ ] **Step 1: Run the full parity suite**
+- [ ] **Step 1: Run the full shape suite**
 
 ```bash
-uv run pytest tests/db/test_query_parity.py -v
+uv run pytest tests/db/test_query_shape.py -v
 ```
 
 Expected: all ~32 tests PASS on DuckDB. If any fail, return to the relevant module task and fix.
 
-- [ ] **Step 2: Run on the postgres backend too (optional, slower)**
-
-```bash
-USE_PRIMARY_DATABASE=false BACKEND=postgres uv run pytest tests/db/test_query_parity.py -v
-```
-
-Expected: same tests PASS on Postgres. Confirms no regressions.
+No Postgres regression run — Postgres has been removed from the query path.
 
 ---
 
@@ -795,10 +747,10 @@ Expected: same tests PASS on Postgres. Confirms no regressions.
 
 **Files:** none modified — manual verification.
 
-- [ ] **Step 1: Start Streamlit pointed at DuckDB**
+- [ ] **Step 1: Start Streamlit pointed at the local DuckDB**
 
 ```bash
-BACKEND=duckdb DUCKDB_PATH=/path/to/full/route_poc.duckdb uv run streamlit run src/ui/app.py --server.port 8504
+DUCKDB_PATH=/path/to/local/route_poc_cache.duckdb uv run streamlit run src/ui/app.py --server.port 8504
 ```
 
 - [ ] **Step 2: Click through every tab for one campaign**
@@ -811,15 +763,13 @@ For a representative campaign, visit:
 - Detailed Analysis — verify each sub-tab loads
 - Executive Summary — verify all sections render
 
-Expected: every tab loads, no Streamlit error banners. MI toggle (mean and median) works on every chart that supports it. Visual output matches Postgres-backed version (eyeball comparison).
+Expected: every tab loads, no Streamlit error banners. MI toggle (mean and median) works on every chart that supports it.
 
-- [ ] **Step 3: Spot-check numerical values**
+For the seven `mv_campaign_browser` reach-derived columns that are NULL until pipeline Phase 5 (`total_reach_all_adults`, `total_grp_all_adults`, `frequency_all_adults`, `cover_pct_all_adults`, `avg_weekly_reach_all_adults`, `is_approximate_reach`, `reach_approximation_method`), the existing flighted-campaign N/A handling should render them as "N/A" without UI error. If a tab crashes on NULL reach, that's a bug to fix here, not at Phase 5 landing.
 
-For one campaign, capture a key metric (e.g. total impacts, frame count) from the DuckDB-backed app and compare to the Postgres-backed app on `main`. Should be identical (same underlying data) or within tolerance if the data sources differ.
+- [ ] **Step 3: If smoke fails**
 
-- [ ] **Step 4: If smoke fails**
-
-Identify the failing tab, find the underlying query function, and confirm whether it's missing from the parity test catalogue or has a deeper dialect issue. Fix and add to the catalogue.
+Identify the failing tab, find the underlying query function, and confirm whether it's missing from the shape test catalogue or has a deeper dialect issue. Fix and add to the catalogue.
 
 ---
 
@@ -828,18 +778,22 @@ Identify the failing tab, find the underlying query function, and confirm whethe
 **Files:**
 - Modify: `.env.example`
 
-- [ ] **Step 1: Document the new env vars**
+- [ ] **Step 1: Replace Postgres env vars with DuckDB-only**
 
-Add to `.env.example`:
+Update `.env.example`. Drop:
+- `USE_PRIMARY_DATABASE`
+- `POSTGRES_HOST_PRIMARY` / `POSTGRES_PORT_PRIMARY` / `POSTGRES_DATABASE_PRIMARY` / `POSTGRES_USER_PRIMARY` / `POSTGRES_PASSWORD_PRIMARY`
+- `POSTGRES_HOST_SECONDARY` / `POSTGRES_PORT_SECONDARY` / `POSTGRES_DATABASE_SECONDARY` / `POSTGRES_USER_SECONDARY` / `POSTGRES_PASSWORD_SECONDARY`
 
+Add:
 ```
-# Database backend selection
-# Options: postgres (default), duckdb
-BACKEND=duckdb
-
-# DuckDB path (required when BACKEND=duckdb)
-DUCKDB_PATH=/path/to/route_poc.duckdb
+# DuckDB read-only path (required)
+# Pulled via rsync per Claude/Handover/POC_RSYNC_OPS.md
+DUCKDB_PATH=/path/to/route_poc_cache.duckdb
 ```
+
+Keep:
+- `DEMO_MODE`, `DEMO_PROTECT_MEDIA_OWNER`, `LOG_LEVEL`, `ENVIRONMENT`
 
 - [ ] **Step 2: Verify CI is green**
 
@@ -853,7 +807,7 @@ Expected: all tests pass.
 
 ```bash
 git add .env.example
-git commit -m "docs: document BACKEND and DUCKDB_PATH env vars"
+git commit -m "docs: replace Postgres env vars with DUCKDB_PATH"
 ```
 
 - [ ] **Step 4: Push branch**
@@ -866,11 +820,11 @@ git push -u origin feature/duckdb-migration
 
 ## Done Criteria
 
-- [ ] All ~32 parity tests pass on DuckDB
-- [ ] All ~32 parity tests pass on Postgres (no regression)
+- [ ] All ~32 shape tests pass on DuckDB
 - [ ] Streamlit smoke test passes for one full campaign across every tab on DuckDB
-- [ ] `.env.example` documents `BACKEND` and `DUCKDB_PATH`
+- [ ] NULL reach columns render gracefully (existing flighted-campaign N/A handling)
+- [ ] `.env.example` documents `DUCKDB_PATH`; Postgres env vars removed
+- [ ] No `psycopg2` imports remain in `src/db/queries/*.py`
 - [ ] Branch pushed to private origin
-- [ ] No new dependencies beyond `duckdb`
 
 This is the H1A ship signal. Streamlit-on-DuckDB works end-to-end. Plan H1B (FastAPI) can begin.

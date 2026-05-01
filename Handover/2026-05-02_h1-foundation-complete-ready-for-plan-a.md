@@ -3,6 +3,10 @@
 **Date:** 2026-05-02
 **Context:** All foundational work for Horizon 1 is done. Spec written, three implementation plans written, infrastructure in place, pipeline-team coordination resolved. The next session should execute **Plan A (DuckDB swap)**.
 
+**Scope decision (2026-05-02):** Postgres is being removed entirely from the POC, not maintained alongside DuckDB. Plan A has been simplified accordingly: no `BACKEND` env var, no dual-backend support, no Postgres regression test. The legacy `feature/mobile-volume-index` branch retains the old Postgres code path for reference but is not migrated.
+
+**Execution environment:** The next Claude session runs on an LXC connected to the Route Tailnet (`tag:iw-dev`), so Tailnet access to `playout-db` is automatic. The session can perform setup tasks (rsync the DuckDB snapshot, install deps, set `DUCKDB_PATH`, install hooks, run smoke tests) autonomously without manual intervention.
+
 ---
 
 ## Where we are
@@ -43,43 +47,55 @@ Neither blocks Plan A. Both are needed before stakeholder demos, but Plan A's sh
 
 **Execute Plan A — DuckDB swap on the existing Streamlit app.** The plan is at `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`, decomposed into 15 bite-sized tasks plus pre-flight setup.
 
-### Pre-flight (before reading Plan A's tasks)
+### Pre-flight (Claude session can run these autonomously)
 
-1. **Verify Tailnet access** to `playout-db`:
+The LXC has Tailnet access to `playout-db` already, so steps 1–6 below run without manual intervention. Walk through them with the user but don't expect setup blockers.
+
+1. **Pull latest on both repos** (in case the work device is stale):
    ```bash
-   tailscale status | grep playout-db        # should show host as active
-   ssh routeapp@playout-db 'hostname; date'  # should print "playout-db" + UTC
+   cd ~/projects/Route-Playout-Econometrics_POC && git fetch origin && git pull origin main
+   cd ../Route-Playout-Econometrics_POC-claude-docs && git pull origin main
    ```
-   If this fails, the next session is blocked on Tailnet ACL — see `Claude/Handover/POC_RSYNC_OPS.md` § Step 1.
 
-2. **Pull the DuckDB snapshot** to a local path (Plan A's pre-flight expects `DUCKDB_PATH` to point at a real file):
+2. **Verify Tailnet + playout-db access:**
    ```bash
+   tailscale status | grep playout-db
+   ssh routeapp@playout-db 'hostname; date'
+   ```
+
+3. **Pull the DuckDB snapshot:**
+   ```bash
+   mkdir -p ~/data
    rsync -avP --partial --inplace \
        routeapp@playout-db:/var/lib/route/snapshots/route_poc_cache.latest.duckdb \
-       /path/to/local/route_poc_cache.duckdb
+       ~/data/route_poc_cache.duckdb
    ```
-   ~87 GB, ~15–30 min over Tailscale on the first pull. Subsequent pulls are delta-only.
+   ~87 GB, ~15–30 min over Tailscale on first pull. Resumable.
 
-3. **Read these in order** before touching code:
-   - `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md` — the plan itself
+4. **Read these in order** before touching code:
+   - `.claude/CLAUDE.md` — project rules and key documents pointer
+   - `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md` — the plan itself (now DuckDB-only, no dual-backend)
    - `Claude/docs/pipeline-coordination.md` — current cross-team state, schema contracts, gotchas
    - `Claude/Handover/POC_INTEGRATION.md` — pipeline team's canonical operational reference
 
-4. **Branch off `main`** for the work:
+5. **Branch off `main`:**
    ```bash
-   cd ~/PycharmProjects/Route-Playout-Econometrics_POC  # or ~/projects/... on Linux
+   cd ~/projects/Route-Playout-Econometrics_POC
    git checkout main
    git pull origin main
    git checkout -b feature/duckdb-migration
    ```
 
-5. **Set `DUCKDB_PATH`** in `.env`:
+6. **Set `DUCKDB_PATH`** in `.env`:
    ```
-   BACKEND=duckdb
-   DUCKDB_PATH=/path/to/local/route_poc_cache.duckdb
+   DUCKDB_PATH=/home/<user>/data/route_poc_cache.duckdb
+   DEMO_MODE=false
+   LOG_LEVEL=INFO
+   ENVIRONMENT=development
    ```
+   No `BACKEND` env var, no Postgres credentials — Postgres is gone.
 
-6. **Run pre-flight Task 0** from Plan A: `uv add duckdb`, verify `import duckdb` works, verify the file connects read-only and `SHOW TABLES` returns expected tables.
+7. **Run pre-flight Task 0** from Plan A: `uv sync` (installs deps including `duckdb`), verify `import duckdb` works, verify the file connects read-only and `SHOW TABLES` returns the expected tables (`mv_campaign_browser`, `cache_route_impacts_15min_by_demo`, `cache_mi_*`, etc.).
 
 ### Then execute the plan
 
@@ -96,10 +112,11 @@ Critical things to know upfront (also covered in pipeline-coordination.md):
 
 ### Ship signal for Plan A
 
-- All ~32 parity tests pass on DuckDB
-- All ~32 parity tests pass on Postgres (no regression — the `BACKEND` env var must support both during the transition)
+- All ~32 shape tests pass on DuckDB
 - Streamlit smoke test passes on DuckDB across every tab for at least one campaign
-- `.env.example` documents `BACKEND` and `DUCKDB_PATH`
+- NULL reach columns render gracefully (existing flighted-campaign N/A handling)
+- `.env.example` documents `DUCKDB_PATH`; Postgres env vars removed
+- No `psycopg2` imports remain in `src/db/queries/*.py`
 - Branch pushed to private origin
 
 ---
