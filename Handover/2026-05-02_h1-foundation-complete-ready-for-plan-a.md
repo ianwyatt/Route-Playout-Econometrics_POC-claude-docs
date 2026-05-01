@@ -80,13 +80,15 @@ The LXC has Tailnet access to `playout-db` already, so steps 1–6 below run wit
    - `Claude/docs/pipeline-coordination.md` — current cross-team state, schema contracts, gotchas
    - `Claude/Handover/POC_INTEGRATION.md` — pipeline team's canonical operational reference
 
-5. **Branch off `main`:**
+5. **Branch off `main` — but check for the anonymisation fix first:**
    ```bash
    cd ~/projects/Route-Playout-Econometrics_POC
    git checkout main
    git pull origin main
+   git merge-base --is-ancestor cf3c716 HEAD && echo "OK" || echo "MISSING — branch off feature/mobile-volume-index instead"
    git checkout -b feature/duckdb-migration
    ```
+   Commit `cf3c716` wires the `DEMO_ANONYMISE_MEDIA_OWNERS` and `DEMO_ANONYMISE_BUYERS` toggles through the UI. If `main` lacks it (because `feature/mobile-volume-index` hasn't been merged yet), branch off `feature/mobile-volume-index` to inherit the fix. Plan A Task 0 covers this in detail.
 
 6. **Set `DUCKDB_PATH`** in `.env`:
    ```

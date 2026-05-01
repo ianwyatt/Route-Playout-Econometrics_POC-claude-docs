@@ -44,9 +44,11 @@ Working constraints:
   setup commands (rsync, uv sync, smoke checks) can chain.
 - TDD discipline per the plan. Don't skip the shape test (Task 5);
   it's the spine of the migration.
-- Branch off main as feature/duckdb-migration. The existing
-  feature/mobile-volume-index branch is unrelated work and should
-  stay untouched.
+- Branch off main as feature/duckdb-migration. Verify cf3c716
+  (anonymisation-wiring fix) is in your base — Plan A Task 0 has
+  the check command. If main is missing it, branch off
+  feature/mobile-volume-index instead. The migration must not
+  drop the anonymisation calls cf3c716 added.
 - 22 of 29 columns in mv_campaign_browser are populated; 7 reach-
   derived columns are NULL until pipeline Phase 5 lands (~2026-05-08).
   Plan A doesn't depend on those, but the shape test and Streamlit

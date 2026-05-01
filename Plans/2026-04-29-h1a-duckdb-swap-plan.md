@@ -43,15 +43,22 @@
 **Files:**
 - Modify: `pyproject.toml`
 
-- [ ] **Step 1: Create feature branch**
+- [ ] **Step 1: Create feature branch from a base that includes the anonymisation fix**
 
 ```bash
 git checkout main
 git pull origin main
+
+# Verify the anonymisation-wiring fix is in the base — if not, branch off
+# feature/mobile-volume-index instead, which definitely has it.
+git merge-base --is-ancestor cf3c716 HEAD && echo "OK: cf3c716 is in base" || echo "MISSING: branch from feature/mobile-volume-index instead"
+
 git checkout -b feature/duckdb-migration
 ```
 
-Expected: branch created, working tree clean.
+**Why this matters:** commit `cf3c716` ("fix: wire DEMO_ANONYMISE_MEDIA_OWNERS and DEMO_ANONYMISE_BUYERS through UI") added anonymisation calls to five files (`browse_tab.py`, `manual_input.py`, `overview.py`, `geographic.py`, `excel.py`). Plan A's per-module rewrites convert psycopg2 cursor patterns to DuckDB but **must not drop these anonymisation calls**. If your base lacks `cf3c716`, the demo-mode UI will silently regress. Easiest path: branch off `feature/mobile-volume-index` (which has it) rather than from `main` if `main` hasn't received the merge yet.
+
+Expected: branch created, working tree clean, `cf3c716` reachable from HEAD.
 
 - [ ] **Step 2: Add duckdb dependency**
 
