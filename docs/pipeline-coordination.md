@@ -2,7 +2,7 @@
 
 Living record of cross-team coordination between the POC and the Route playout pipeline team. Captures schema contracts, open coordination items, resolved decisions, and operational gotchas. Intended to be appended to as new rounds happen, not archived.
 
-**Last updated:** 2026-05-01 (MVs live, snapshot ready for rsync)
+**Last updated:** 2026-05-02 (ops note delivered, rsync ready)
 
 ---
 
@@ -112,13 +112,20 @@ Rsync replica fanout to `playout-frontend` LXC via `scripts/tools/duckdb_post_wr
 
 | Item | Asked | Status | Next action |
 |---|---|---|---|
-| Ops note: Tailnet credentials, rsync command, read-only attach example | 2026-05-01 | Pending — within ~24h of snapshot delivery | Pipeline sends 2026-05-02 |
-| Phase 5 timeline | 2026-05-01 | Tracking ~2026-05-08 | Pipeline confirms estimate then |
+| Phase 5 timeline | 2026-05-01 | Tightened to "next Friday-ish" (~2026-05-08) | Pipeline pings on landing |
 | MI summary tables — extend to full year | 2026-05-01 | Open, deferred | Will plan into Phase 5 or 5a |
 
 ---
 
 ## Resolved rounds
+
+### 2026-05-02 — Rsync ops note delivered
+
+**Pipeline delivered:** `Handover/POC_RSYNC_OPS.md` — full operational doc covering Tailnet access (`tailafc0d.ts.net`, tag `tag:iw-dev`, user `routeapp`), exact rsync command (`rsync -avP --partial --inplace routeapp@playout-db:/var/lib/route/snapshots/route_poc_cache.latest.duckdb /local/path`), read-only attach example, snapshot cadence (per-event, ping-driven), throughput expectations (~50–100 MB/s over Tailscale, 15–30 min for 87 GB first pull, delta-only thereafter), troubleshooting table, and a "no pull, query directly over SSH" alternative.
+
+Latest snapshot identity: `route_poc_cache.post-mv-rebuild.20260501T122821Z.duckdb` (87 GB).
+
+**Outcome:** All pre-development blockers cleared. POC migration scaffolding can proceed with a real DuckDB target. Phase 5 ETA tightened to "next Friday-ish" (~2026-05-08).
 
 ### 2026-05-01 (later) — MVs live, snapshot ready
 
@@ -224,7 +231,10 @@ The live DuckDB at `/var/lib/route/route_poc_cache.duckdb` can be mid-write duri
 ### Single-writer constraint
 DuckDB allows only one writer at a time. During cacher rebuilds (~10–30 min wall) or MV rebuilds, the file is exclusive-locked. Reads during that window fail with `IO Error: Could not set lock on file …`. Plan around this — graceful retry-with-backoff if the POC ever reads playout-db directly.
 
-For the rsync workflow this isn't a concern — we read from a snapshot, not the live file.
+For the rsync workflow this isn't a concern — we read from a snapshot, not the live file. Always pass `read_only=True` to `duckdb.connect()` so multiple POC processes (Streamlit, FastAPI, parity test) can attach the same local file concurrently.
+
+### DuckDB memory-maps the snapshot — budget RAM headroom
+The 87 GB file is memory-mapped on attach; resident memory grows as queries touch more columns / rows. Budget at least **8–16 GB RAM headroom** for analytical queries against the impacts table (2.32B rows). On a small dev box, prefer the SSH-direct query path (LXC has 16 cores / 256 GB RAM) over a local pull.
 
 ### Two demographic code spaces
 - `cache_route_impacts_15min_by_demo.demographic_segment`: 7 values — `all_adults, abc1, age_15_34, age_35_plus, c2de, children_hh, main_shopper`
