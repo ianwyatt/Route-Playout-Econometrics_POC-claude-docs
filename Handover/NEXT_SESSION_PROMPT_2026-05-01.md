@@ -81,3 +81,23 @@ pattern:
 Walk through Task 6 step by step, confirm `campaigns.py`'s slice of the
 shape test goes green before committing, then ask for go before moving
 to Task 7.
+
+## At the end of this session
+
+Before stopping, write two files in the docs repo (`Claude/Handover/`):
+
+1. A handover doc dated today: `Claude/Handover/YYYY-MM-DD_<short-status>.md`
+   covering current state, commits made (with SHAs), deviations from
+   the plan, the conversion pattern still ahead, gotchas discovered.
+2. A dated session prompt for the next session:
+   `Claude/Handover/NEXT_SESSION_PROMPT_YYYY-MM-DD.md`. This is a
+   read-and-act doc — the user points the next session at it and asks
+   them to read it. Include only what the next session needs:
+   actionable read-list, env state, working constraints, pre-flight
+   commands, and the next task to start. Keep this same "At the end of
+   this session" section at the bottom so the convention persists.
+
+The dated session prompts capture session boundaries and help retrace
+work when later sessions go off track. The latest dated file is always
+the next session prompt — sort by date to find it
+(`ls Claude/Handover/NEXT_SESSION_PROMPT_*.md | sort | tail -1`).
