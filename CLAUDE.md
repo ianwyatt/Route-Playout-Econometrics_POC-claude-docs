@@ -107,6 +107,7 @@ No live deployment target at present. Parallels VM retired; DigitalOcean plan pa
 | `Claude/Plans/2026-04-29-h1c-react-advertiser-views-plan.md` | Plan C — React advertiser views tasks |
 | `Claude/docs/pipeline-coordination.md` | Living record of cross-team coordination (schema contracts, gotchas, open items) |
 | `Claude/docs/multi-machine-setup-and-repo-workflow.md` | Three-remote pattern, new-machine setup procedure |
+| `Claude/docs/postgres-demo-worktree.md` | Frozen Postgres-demo worktree at `v2.1-postgres-final` — how to use, troubleshoot, replace |
 | `Claude/Handover/POC_INTEGRATION.md` | Pipeline team's canonical operational reference (DuckDB schema, gotchas) |
 | `Claude/Handover/POC_RSYNC_OPS.md` | How to pull the DuckDB snapshot via rsync |
 | `docs/README.md` | Full doc index for source-code-side documentation |

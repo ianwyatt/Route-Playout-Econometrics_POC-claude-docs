@@ -5,6 +5,8 @@
 
 **Scope decision (2026-05-02):** Postgres is being removed entirely from the POC, not maintained alongside DuckDB. Plan A has been simplified accordingly: no `BACKEND` env var, no dual-backend support, no Postgres regression test. The legacy `feature/mobile-volume-index` branch retains the old Postgres code path for reference but is not migrated.
 
+**Postgres demos still possible** via a frozen git worktree at `v2.1-postgres-final` (commit `5ecf18c`). Lives at `~/projects/Route-Playout-Econometrics_POC-postgres-demo/` (or `~/PycharmProjects/...` on Mac). Stays valid for stakeholder demos throughout Plan A → C development. Full operational reference: `Claude/docs/postgres-demo-worktree.md`.
+
 **Execution environment:** The next Claude session runs on an LXC connected to the Route Tailnet (`tag:iw-dev`), so Tailnet access to `playout-db` is automatic. The session can perform setup tasks (rsync the DuckDB snapshot, install deps, set `DUCKDB_PATH`, install hooks, run smoke tests) autonomously without manual intervention.
 
 ---
