@@ -2,7 +2,7 @@
 
 Living record of cross-team coordination between the POC and the Route playout pipeline team. Captures schema contracts, open coordination items, resolved decisions, and operational gotchas. Intended to be appended to as new rounds happen, not archived.
 
-**Last updated:** 2026-05-02 (ops note delivered, rsync ready, Postgres removed from POC scope)
+**Last updated:** 2026-05-05 (added `cache_campaign_reach_week` two-`reach_type` gotcha discovered in `ccf78b8`)
 
 ---
 
@@ -262,6 +262,18 @@ The cover% calculation in the original Postgres MV joined `cache_demographic_uni
 
 ### `route_release_id = NULL` for non-route-measured campaigns
 200 rows in `mv_campaign_browser` (v1) have `route_release_id = NULL` — these are campaigns whose `start_date` had no Route-measured frames at the corresponding release. Pipeline's `non_route_measured_frames` convention. Their impacts cols are also NULL or partially populated. Existing flighted-campaign N/A handling renders them gracefully — they appear in the browser list with NULL reach + NULL release, sorting to the bottom under `NULLS LAST`. Cover% join to `cache_demographic_universes` will skip them (NULL release ID can't match any universe row), which is the correct behaviour.
+
+### `cache_campaign_reach_week` has two `reach_type` values per (campaign, week)
+The table stores two row types per `(campaign_id, week_number)` pair:
+
+- `reach_type = 'individual'` — per-week reach value
+- `reach_type = 'cumulative'` — running total up to and including that week
+
+Worked example, campaign 18139 week 2: individual = 110.7k, cumulative = 1023.3k. The cumulative row is the running total — summing both row types double-counts and silently inflates per-week values.
+
+**Any new SQL against this table must filter `reach_type = 'individual'` unless it explicitly wants the cumulative running totals.** A pre-existing POC bug in `get_weekly_reach_data_sync` did not filter, and downstream aggregations (`_aggregate_weekly_impacts`, `get_advertiser_weekly_timeseries` non-MI branch) silently summed both per-week bucket — fixed in `ccf78b8` (2026-05-02). The bulk variant `get_weekly_reach_for_campaigns_sync` introduced in the same commit applies the filter as well.
+
+Pipeline team's `POC_INTEGRATION.md` does not currently call this out — flag in the next coordination round so other consumers don't hit the same bug.
 
 ---
 

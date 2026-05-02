@@ -45,10 +45,10 @@ Both are gitignored in the code repo, so they must be recreated on each machine.
 ```bash
 git push                               # → private origin (daily driver)
 git push zimacube <branch>             # → Gitea backup, if configured
-git push public vX.Y-<theme>           # → public release, ANNOTATED TAGS ONLY
+git push public vX.Y-<theme>           # → public release, ANNOTATED TAGS ONLY — see policy below
 ```
 
-Branch pushes to `public` are rejected by the pre-push hook. Releases require annotated tags created with `git tag -a vX.Y-name -m "release notes"`.
+Branch pushes to `public` are rejected by the pre-push hook. The annotated-tag mechanism is what's documented here; **whether to actually push to `public` is a separate policy decision.** See `.claude/CLAUDE.md` → "Public-repo policy" — current default is do NOT push to `public` (tag or branch) without an explicit user instruction naming the `public` remote. Annotated tags are created with `git tag -a vX.Y-name -m "release notes"`.
 
 ### Docs
 

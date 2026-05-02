@@ -9,7 +9,7 @@ Three-remote pattern. Adwanted use the public repo as their production reference
 | Remote | URL | Role |
 |--------|-----|------|
 | `origin` | GitHub private — `RouteResearch/Route-Playout-Econometrics_POC-dev` | Daily driver. `git push` defaults here. |
-| `public` | GitHub public — `RouteResearch/Route-Playout-Econometrics_POC` | **Tags only.** Adwanted's reference. Pre-push hook blocks branch pushes; annotated tags required. |
+| `public` | GitHub public — `RouteResearch/Route-Playout-Econometrics_POC` | Adwanted's public reference. **Default stance: do NOT push (tags or branches) without an explicit user instruction naming the `public` remote.** Pre-push hook blocks branch pushes regardless. |
 | `zimacube` | Gitea (Tailscale) | Backup mirror. |
 
 **Docs repo (`Route-Playout-Econometrics_POC-claude-docs`)** — handovers, todos, CLAUDE.md, plans
@@ -23,15 +23,21 @@ Docs repo NEVER goes to public GitHub — pre-push hook blocks it unless the `.c
 
 The code repo has symlinks (`.claude/` and `Claude/`) pointing to the docs repo. New machine setup: see `Claude/docs/multi-machine-setup-and-repo-workflow.md`.
 
-### Release workflow (publishing to Adwanted)
+### Public-repo policy
+
+**Default: stay on `origin` (private dev). Do NOT push anything — tag or branch — to the `public` remote unless the user explicitly says so naming `public`.**
+
+The current intent is to keep iterating on `origin` and only consider a public push later, possibly never (the public repo may simply remain frozen at the current Adwanted reference). The pre-push hook blocks branch pushes to `public` as a backstop, but the policy applies to tags too — the hook does not block those.
+
+If asked to publish, the release flow is:
 
 ```bash
 git tag -a vX.Y-<theme> -m "release notes"
 git push origin vX.Y-<theme>      # tag to private dev
-git push public vX.Y-<theme>      # tag to public reference
+git push public vX.Y-<theme>      # ONLY when user explicitly asks
 ```
 
-Never `git push public main` or any branch — the pre-push hook will reject it.
+Never `git push public main` or any branch — the pre-push hook will reject it. And never offer "merge + tag + push public" as a single step in a session prompt or handover; the public push is always its own opt-in.
 
 **NEVER commit without explicit user approval.** Wait for "commit" or "commit and push".
 

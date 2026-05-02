@@ -39,7 +39,7 @@ If the user runs the app and is surprised by smaller numbers, this is
 expected and intended — direct them to the handover doc for the
 explanation.
 
-## Merge / release flow
+## Merge flow
 
 When the user explicitly says "merge":
 
@@ -47,15 +47,19 @@ When the user explicitly says "merge":
 git checkout main
 git pull --ff-only origin main
 git merge --no-ff feature/duckdb-migration
-git push origin main          # private dev repo
-
-git tag -a v3.0-h1-react-foundation -m "H1: DuckDB + FastAPI + React advertiser views"
-git push origin v3.0-h1-react-foundation        # tag to private dev
-git push public v3.0-h1-react-foundation        # tag to public reference
+git push origin main          # private dev repo only
 ```
 
-Do **NOT** `git push public main` or any branch — the pre-push hook
-will reject it. Tag-push is the only path to the public repo.
+**Do not push anything to the `public` remote** — neither branches
+(blocked by pre-push hook) nor tags (policy, not blocked). The current
+intent is to keep iterating on `origin` and treat the public repo as a
+frozen Adwanted reference. See `.claude/CLAUDE.md` → "Public-repo
+policy". A public push only happens if the user later explicitly asks,
+naming the `public` remote.
+
+Tagging is also optional at merge time — only tag if the user asks for
+a release marker. If they do, `git tag -a vX.Y-<theme>` then
+`git push origin vX.Y-<theme>` (private dev only).
 
 After merge, the user may want a follow-up cleanup commit on `main`
 for floor item `#6` (decomposition of `src/api/services/advertisers.py`
@@ -115,9 +119,11 @@ or broken base.
   are unsure" mode. NEVER use `--no-verify`.
 - **NEVER merge without explicit user approval** — the user retains
   the merge decision per CLAUDE.md.
-- **Do NOT push to public GitHub branches.** `origin` (private dev
-  repo) only. Pre-push hook blocks branch pushes to `public`; tag-push
-  is the only way to reach the public repo.
+- **Do NOT push anything to the `public` remote** — neither branches
+  (blocked by pre-push hook) nor tags (policy). `origin` (private dev
+  repo) only. The public repo stays as a frozen Adwanted reference
+  unless the user explicitly says otherwise, naming the `public`
+  remote. See `.claude/CLAUDE.md` → "Public-repo policy".
 - **Subagents for mechanical work**, parallel when files are disjoint,
   sequential when they share a file. Always review the diff before
   committing.
