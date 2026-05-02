@@ -12,18 +12,48 @@ review), `#4` (pre-existing mobile_index test failures), and `#6`
 
 ## Read these in order before touching anything
 
-1. `.claude/CLAUDE.md` — project rules and key documents pointer.
-2. `Claude/Handover/2026-05-02_pre-merge-cleanup-floor-items-1-and-5.md`
-   — what the previous session did (sidebar refactor + advertiser-overview
-   perf rewrite + cumulative-row bug fix), perf timings, modularity
-   warning on `src/api/services/advertisers.py`, floor-items state.
-3. `Claude/Handover/2026-05-02_plan-c-complete-h1c-shipped.md` — original
+1. `.claude/CLAUDE.md` — project rules and key documents pointer. Note
+   the new "Public-repo policy" section.
+2. `Claude/Handover/2026-05-02_public-repo-policy-and-block-hook.md`
+   — the most recent session's work (policy hardening + Claude Code
+   hook installation + pipeline-coordination gotcha doc). Includes
+   the hook-activation status note — read before the live-fire check
+   below.
+3. `Claude/Handover/2026-05-02_pre-merge-cleanup-floor-items-1-and-5.md`
+   — sidebar refactor + advertiser-overview perf rewrite + cumulative-row
+   bug fix, perf timings, modularity warning on
+   `src/api/services/advertisers.py`, floor-items state.
+4. `Claude/Handover/2026-05-02_plan-c-complete-h1c-shipped.md` — original
    Plan-C close-out for full H1 commit list (now 71 commits ahead of
    `main`) and architectural notes.
-4. `Claude/docs/pipeline-coordination.md` — cross-team state. Phase 5
+5. `Claude/docs/pipeline-coordination.md` — cross-team state. Phase 5
    ETA was tightened to "next Friday-ish" (~2026-05-08); reach columns
-   in `mv_campaign_browser` will start populating from then. No new
-   coordination items in flight.
+   in `mv_campaign_browser` will start populating from then. New
+   "Operational gotcha" entry on `cache_campaign_reach_week`'s two
+   `reach_type` values — reference for any new SQL touching that table.
+
+## Verify the public-push hook is live (do this first)
+
+The previous session installed a Claude Code PreToolUse hook
+(`.claude/settings.json` + `.claude/scripts/block-public-push.sh`)
+that denies `git push public ...` and the URL-form variants so the
+assistant must ask before retrying. It was committed at `3e0562e`
+on docs `origin` but did NOT activate in the previous session —
+Claude Code's settings watcher only picks up files that existed at
+session start, and `/hooks` is display-only. The hook SHOULD
+activate automatically in this fresh session.
+
+**Live-fire check before any other work**:
+
+> Have the assistant run `git push public --dry-run` (or any
+> push-to-public form). It should be denied by the hook with the
+> policy message — NOT contact GitHub.
+
+If denied: safety net active, proceed.
+If it reaches GitHub: the watcher still hasn't picked up the file
+(possibly the symlink to the docs repo isn't being followed). The
+assistant should manually honour the policy from CLAUDE.md and
+surface the issue. See the prior handover for what was tried.
 
 ## Important — bug fix changes user-visible numbers
 
@@ -163,6 +193,11 @@ or broken base.
 - **Lazy-loaded routes**: detail page uses `React.lazy()` to keep
   Plotly out of the initial bundle. Pattern to follow for any heavy
   route in H2.
+- **Claude Code hook reload limitation**: newly-created `settings.json`
+  files in dirs that didn't have one at session start require a full
+  `/exit` + re-launch to take effect. `/hooks` is display-only.
+  Hooks committed in past sessions DO load automatically at session
+  start.
 
 ## At the end of this session
 
