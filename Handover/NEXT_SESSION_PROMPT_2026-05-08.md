@@ -48,16 +48,27 @@ Net effect: dead `_estimate_load_time` and `_compute_mi_averages`
 removed (60 lines); three test files migrated off stale `use_primary`
 kwarg / `index_value` schema. Full suite **212 passed**.
 
-## Outstanding work — pick one with the user
+## Outstanding work — start at the top
+
+The 2026-05-03 session settled this priority order with the user.
+Items 1–5 are eyes-free for the user (no visual review needed). Do
+them in order; pause between each for "go". Items 6–7 need user
+bandwidth and come last.
 
 | # | Item | Notes |
 |---|---|---|
-| 2 | Shape-descriptor tuning | First-cut heuristic for the React Overview cards; revisit once Phase 5 reach data lands and real shapes emerge — much higher signal then |
-| 3 | Visual fidelity review | React advertiser views vs Pepsi/Talon Netlify designs |
+| 1 | **Code review of `main`** | Broad review of the codebase as it stands at `89ed99e`. Surface bugs, smells, missing tests, dead code, schema drift, dependency hygiene. Group findings by severity and propose a prioritised fix list before writing any code. Do NOT start fixes without user approval — the review output is itself the deliverable. |
+| 2 | Schema-drift / stale-reference sweep | Same shape as the 2026-05-03 audit that caught `use_primary` and `index_value` leftovers. Grep for any remaining `use_primary` references across `src/`, `scripts/`, and `tests/`; check for other params dropped during the DuckDB swap; check for stale column names. Likely a few small commits. |
+| 3 | Backend test-coverage gap audit | `src/db/queries/` and `src/api/` — find untested paths against current behaviour and add unit tests. Pure backend, no UI. |
+| 4 | mypy strict-mode pass | `pyproject.toml` already declares `disallow_untyped_defs = true`. Run `uv run mypy src/` and produce a mechanical fix list; commit annotation gaps in batches. |
+| 5 | Docs drift check | `Claude/docs/pipeline-coordination.md`, `docs/README.md`, `Claude/Plans/*` vs current state of the code. Update or archive. |
+| 6 | Shape-descriptor tuning | First-cut heuristic for the React Overview cards; **only useful once Phase 5 reach data has landed** — confirm via `Claude/docs/pipeline-coordination.md` before starting. Needs user eyes-on for label validation. |
+| 7 | Visual fidelity review | React advertiser views vs Pepsi/Talon Netlify designs. Needs user eyes-on. |
 
-If Phase 5 has landed by the time this prompt is picked up, #2 becomes
-the natural next task. If not, #3 is the only purely-code-and-eyes
-task left and is independent of pipeline state.
+Start with #1 (code review of `main`). It feeds the backlog — the
+sweep / coverage / mypy / docs items (#2–#5) may be wholly or partly
+absorbed into the review's findings, in which case execute against
+the review output rather than the standalone item.
 
 ## Pre-flight check before starting
 
