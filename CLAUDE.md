@@ -66,6 +66,7 @@ Env vars (`.env`): `DUCKDB_PATH` (required), `DEMO_MODE`, `DEMO_PROTECT_MEDIA_OW
 2. Keep SQL in `src/db/queries/` (one file per domain), not scattered in UI code
 3. Extract reusable chart logic to `components/`
 4. **`use_primary` is vestigial** — ~100 sites in `src/ui/` thread it as a cache-key differentiator from the Postgres era. The campaign-browser radio button toggles `os.environ["USE_PRIMARY_DATABASE"]` but no longer switches anything in DuckDB-only mode. Don't introduce new code that relies on it; a dedicated cleanup branch removes the chain.
+5. **Route source audiences are in thousands.** `cache_route_impacts_15min_by_demo.impacts`, `mv_campaign_browser.total_impacts_all_adults` (and the other `*_impacts_*` / `*_reach_*` columns), `cache_mi_*` raw/indexed/median values — all stored in thousands per OOH industry convention. Display layer either multiplies by 1000 (Overview, campaign analyzer, `from_thousands()` helper) OR labels the metric/column "(000s)" (Executive Summary, Frame Audiences, Geographic). Both conventions are intentional and live side-by-side. Empirical equality between an MV and canonical (e.g. `total_impacts_all_adults` matches `SUM(impacts)`) does NOT establish that the unit is real impacts — it just means both sides use the same unit (thousands). Never remove a `×1000` site or a `(000s)` label thinking it's a bug. New code: pick whichever convention the surrounding view uses.
 
 ## Database
 
