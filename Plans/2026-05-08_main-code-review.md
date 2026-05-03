@@ -111,6 +111,38 @@ sites consistent.
 to determine the unit, then standardise. This is a number shown to
 econometricians — wrong scale is the worst failure mode.
 
+> **2026-05-03 update — C5 framing was wrong.** Investigation
+> established that Route source values (impacts/reach in the canonical
+> table, the MVs derived from it, and `cache_mi_frame_totals`) are all
+> stored in **thousands**, by industry convention. The existing ×1000
+> sites in Overview and `campaign_analyzer.py` are correct, as is the
+> "(000s)" labelling in Executive Summary and Frame Audiences.
+>
+> The actual problem the review surfaced is in Geographic, but it's
+> not unit-scaling — it's three layered bugs:
+>
+> 1. `JOIN route_frames` in `src/db/queries/geographic.py` has no
+>    release filter, so frames in multiple Route releases are counted
+>    multiple times (~3.7× row inflation per campaign).
+> 2. The Geographic display sites (top metric card, regional/towns
+>    tables, bar chart, map tooltip) treated raw thousands as real
+>    impacts when applying "M"/"K" suffixes — under-displayed by 1000×.
+> 3. `mv_cache_campaign_impacts_frame` is a stale snapshot truncating
+>    impacts at ~2025-10-13 vs canonical's 2025-12-31 — pipeline-team
+>    work, not POC.
+>
+> Bugs 1 + 2 fixed on branch `fix/geographic-data-scope-mismatch`
+> (Bug 2 via Option β: "(000s)" labels). Bug 3 handed over to the
+> pipeline team —
+> see `Claude/Handover/2026-05-03_pipeline-mv-cache-campaign-impacts-frame-stale.md`.
+>
+> Full forensics:
+> `Claude/Plans/2026-05-03_geographic-overview-data-scope-forensics.md`.
+>
+> Memory rule captured to prevent the same misread next time:
+> "Route source audiences are in thousands" — see
+> `feedback_route_audiences_in_thousands.md` in auto-memory.
+
 ### C6. `src/ui/app.py` ABOUTME and module docstring still claim PostgreSQL — VERIFIED
 
 Line 2 says `# ABOUTME: Cache-first campaign analysis UI — all data

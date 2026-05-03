@@ -2,7 +2,7 @@
 
 Living record of cross-team coordination between the POC and the Route playout pipeline team. Captures schema contracts, open coordination items, resolved decisions, and operational gotchas. Intended to be appended to as new rounds happen, not archived.
 
-**Last updated:** 2026-05-05 (added `cache_campaign_reach_week` two-`reach_type` gotcha discovered in `ccf78b8`)
+**Last updated:** 2026-05-03 (added open item: `mv_cache_campaign_impacts_frame` refresh request)
 
 ---
 
@@ -114,6 +114,7 @@ Rsync replica fanout to `playout-frontend` LXC via `scripts/tools/duckdb_post_wr
 |---|---|---|---|
 | Phase 5 timeline | 2026-05-01 | Tightened to "next Friday-ish" (~2026-05-08) | Pipeline pings on landing |
 | MI summary tables — extend to full year | 2026-05-01 | Open, deferred | Will plan into Phase 5 or 5a |
+| `mv_cache_campaign_impacts_frame` refresh | 2026-05-03 | Open | MV truncates impacts at ~2025-10-13 (last canonical slot 2025-12-31) — appears not picked up in Phase 4 rebuild. ~30% per-frame undercount. Full handover in `Claude/Handover/2026-05-03_pipeline-mv-cache-campaign-impacts-frame-stale.md`. |
 
 ---
 
