@@ -1,10 +1,9 @@
 # Session prompt — 2026-05-07
 
-H1 floor item #6 is merged to `main` (`f165362`). Floor item #7
-(tab-file decomposition) is closed across 6 commits on
-`refactor/decompose-tab-files`, **pushed to `origin` but not
-merged**. The user retains the merge decision per CLAUDE.md — wait
-for explicit "merge".
+H1 floor items #6 and #7 are both merged to `main` (`459ccfa`).
+The tab-file decomposition refactor branch
+(`refactor/decompose-tab-files`) was merged via `--no-ff`, pushed,
+and deleted locally + on `origin`. No active feature branches.
 
 ## Read these in order before touching anything
 
@@ -28,12 +27,10 @@ for explicit "merge".
 ## Branch state at session start
 
 ```
-main                              ← f165362 (floor #6 merged, pushed)
-refactor/decompose-tab-files      ← ed6e31e (6 commits, pushed,
-                                              not merged)
+main                              ← 459ccfa (floor #6 + floor #7 merged)
 ```
 
-The 6 commits on the refactor branch:
+The 6 commits on the now-merged refactor branch:
 
 ```
 ed6e31e refactor(ui): decompose detailed_analysis tab into a package
@@ -65,12 +62,9 @@ all six tabs (0 console errors, 0 warnings).
 
 Other possibilities:
 
-- **Merge `refactor/decompose-tab-files` to `main`** — wait for
-  explicit user instruction. Standard merge flow per the previous
-  prompts. `origin` only, no public push.
 - **Wait for Phase 5** — if user wants to see what changes after the
   pipeline lands before doing more, several items are higher-signal
-  post-Phase-5.
+  post-Phase-5 (especially #2 and parts of #3).
 
 ## Pre-flight check before starting
 
@@ -78,11 +72,9 @@ Other possibilities:
 cd /home/dev/projects/Route-Playout-Econometrics_POC
 git fetch origin
 git status                                # confirm clean working tree
-git log --oneline -3 origin/main          # confirm f165362 is HEAD of main
+git log --oneline -3 origin/main          # confirm 459ccfa is HEAD of main
 
-# If continuing on the refactor branch:
-git checkout refactor/decompose-tab-files
-git pull --ff-only
+# Start any new floor-item work on a fresh branch off main.
 
 # Backend tests
 uv run pytest tests/api tests/db 2>&1 | tail -3        # 133 tests, all green
@@ -99,8 +91,7 @@ or broken base.
 
 ## Execution environment
 
-- Branch: depends on task. `main` for new floor-item branches; check
-  out `refactor/decompose-tab-files` if continuing pre-merge polish.
+- Branch: start any new work on a fresh feature branch off `main`.
 - `DUCKDB_PATH=/home/dev/data/route_poc_cache.duckdb` (87 GB,
   identity `route_poc_cache.post-mv-rebuild.20260501T122821Z.duckdb`)
 - `.env`: see `.env.example`. Same values as previous prompt.
