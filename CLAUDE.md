@@ -65,13 +65,14 @@ Env vars (`.env`): `DUCKDB_PATH` (required), `DEMO_MODE`, `DEMO_PROTECT_MEDIA_OW
 1. Check `src/ui/components/` for existing functions before creating new ones
 2. Keep SQL in `src/db/queries/` (one file per domain), not scattered in UI code
 3. Extract reusable chart logic to `components/`
+4. **`use_primary` is vestigial** — ~100 sites in `src/ui/` thread it as a cache-key differentiator from the Postgres era. The campaign-browser radio button toggles `os.environ["USE_PRIMARY_DATABASE"]` but no longer switches anything in DuckDB-only mode. Don't introduce new code that relies on it; a dedicated cleanup branch removes the chain.
 
 ## Database
 
 DuckDB is the sole read-only query backend. Postgres has been removed from the query path; the legacy `feature/mobile-volume-index` branch retains the old Postgres connection logic for reference but is not maintained.
 
 - Full-year 2025 coverage: ~2.32B rows in `cache_route_impacts_15min_by_demo`, 339 days
-- `mv_campaign_browser`: 3,064 campaigns × 29 columns (7 reach-derived columns NULL until pipeline Phase 5 lands ~2026-05-08)
+- `mv_campaign_browser`: 3,064 campaigns × 29 columns (7 reach-derived columns NULL until pipeline Phase 5 — ETA was ~2026-05-08, slipping; check `Claude/docs/pipeline-coordination.md` for current status)
 - Snapshot lives at `/var/lib/route/snapshots/route_poc_cache.latest.duckdb` on `playout-db` LXC (~87 GB); pulled via rsync to local `DUCKDB_PATH`. **Never rsync the live `route_poc_cache.duckdb`** — it can be mid-write during cacher rebuilds.
 - Pull procedure: `Claude/Handover/POC_RSYNC_OPS.md`
 - Connection: always `read_only=True` so multiple POC processes (Streamlit, FastAPI, parity test) can attach concurrently
@@ -89,17 +90,24 @@ Fallback pattern in `impacts.py`: try precomputed `mv_*` first, fall back to raw
 - Monitor from Claude with quick query checks
 - If a script must be killed, terminate the process explicitly
 
-## Active Work — Horizon 1 (committed)
+## Horizon 1 — shipped
 
-H1 is decomposed into three executable plans, each producing ship-able software:
+All three Plan branches are merged. No active feature branches.
 
-- **Plan A — DuckDB swap** (`Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`) — Postgres → DuckDB on the existing Streamlit app. **Shipped 2026-05-01** at `e358699` on `feature/duckdb-migration`; 33/33 shape tests green, Streamlit smoke clean. Branch stays open for Plans B/C until merge. Completion handover: `Claude/Handover/2026-05-01_plan-a-complete-h1a-shipped.md`.
-- **Plan B — FastAPI layer** (`Claude/Plans/2026-04-29-h1b-fastapi-layer-plan.md`) — thin JSON layer over the existing query functions, plus new advertiser-trends endpoints. Next session starts here.
-- **Plan C — React advertiser views** (`Claude/Plans/2026-04-29-h1c-react-advertiser-views-plan.md`) — Vite + React + TypeScript app on `localhost:5173` consuming Plan B's API; ports the Pepsi/Talon Netlify visual language; ships single-advertiser detail + overview.
+- **Plan A — DuckDB swap** — shipped 2026-05-01, `e358699`. Plan: `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md`. Completion: `Claude/Handover/2026-05-01_plan-a-complete-h1a-shipped.md`.
+- **Plan B — FastAPI layer** — shipped, see `Claude/Handover/2026-05-02_plan-b-complete-h1b-shipped.md`.
+- **Plan C — React advertiser views** — shipped, see `Claude/Handover/2026-05-02_plan-c-complete-h1c-shipped.md`.
 
-Architectural spec covering all three: `Claude/Plans/2026-04-29-h1-duckdb-fastapi-react-foundation.md`.
+Architectural spec: `Claude/Plans/2026-04-29-h1-duckdb-fastapi-react-foundation.md`.
 
-H2–H4 (further tabs ported, multi-user, custom audiences) are captured as forward intent only; not in scope until H1 ships.
+## Current backlog
+
+Active work is driven by the 2026-05-08 main code review and the floor-item list:
+
+- **Review document:** `Claude/Plans/2026-05-08_main-code-review.md` — 6 CRITICAL, 11 HIGH, 13 MEDIUM, prioritised fix sequence in §6. **The canonical source of truth for the open backlog.**
+- **Latest session prompt:** `Claude/Handover/NEXT_SESSION_PROMPT_*.md` (latest by date) — the re-ordered priority list folding the review's findings into the floor items.
+
+H2–H4 (further tabs ported, multi-user, custom audiences) remain forward intent; not in scope until the post-H1 backlog clears.
 
 No live deployment target at present. Parallels VM retired; DigitalOcean plan paused. Public GitHub repo serves as Adwanted's production reference.
 
@@ -111,6 +119,7 @@ No live deployment target at present. Parallels VM retired; DigitalOcean plan pa
 | `Claude/Plans/2026-04-29-h1a-duckdb-swap-plan.md` | Plan A — DuckDB migration tasks |
 | `Claude/Plans/2026-04-29-h1b-fastapi-layer-plan.md` | Plan B — FastAPI layer tasks |
 | `Claude/Plans/2026-04-29-h1c-react-advertiser-views-plan.md` | Plan C — React advertiser views tasks |
+| `Claude/Plans/2026-05-08_main-code-review.md` | Main code review — current backlog source of truth |
 | `Claude/docs/pipeline-coordination.md` | Living record of cross-team coordination (schema contracts, gotchas, open items) |
 | `Claude/docs/multi-machine-setup-and-repo-workflow.md` | Three-remote pattern, new-machine setup procedure |
 | `Claude/docs/postgres-demo-worktree.md` | Frozen Postgres-demo worktree at `v2.1-postgres-final` — how to use, troubleshoot, replace |
